@@ -5,6 +5,7 @@ Database library for Android based on SQLite
 ### Usage:
 
 Create tables by implementing ```Table``` interface:
+
 ```java
 public class DogTable implements Table<Dog> {
 
@@ -55,7 +56,9 @@ public class DogTable implements Table<Dog> {
     }
 }
 ```
+
 Then override SQLiteHelper and register all tables:
+
 ```java
 public class MySQLiteHelper extends SQLiteHelper {
 
@@ -72,6 +75,7 @@ public class MySQLiteHelper extends SQLiteHelper {
 ```
 
 Then create instance of your SQLiteHelper using dependency injection or make it singleton:
+
 ```java
 public class MainActivity extends AppCompatActivity {
 
@@ -98,7 +102,7 @@ List<Dog> puppies  = sqLiteHelper.query(DogTable.TABLE, Selection.create().lessT
 
 ```java
 Dog dog = new Dog(1, "Guffy", 1);
-sqLiteHelper.get(this).insert(DogTable.TABLE, dog);
+sqLiteHelper.insert(DogTable.TABLE, dog);
 ```
 
 ### Delete
