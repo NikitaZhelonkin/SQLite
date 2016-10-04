@@ -15,6 +15,7 @@ import android.support.v4.util.Pair;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class SQLiteHelper extends SQLiteOpenHelper {
 
@@ -31,7 +32,7 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
     public SQLiteHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
         mTables = new ArrayList<>();
-        mListeners = new ArrayList<>();
+        mListeners = new CopyOnWriteArrayList<>();
         mMainHandler = new Handler(Looper.getMainLooper());
     }
 
