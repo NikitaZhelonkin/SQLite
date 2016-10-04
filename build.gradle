@@ -4,6 +4,8 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.2.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
+        classpath 'com.github.dcendents:android-maven-plugin:1.2'
     }
 }
 
@@ -11,6 +13,12 @@ allprojects {
     repositories {
         jcenter()
     }
+}
+
+ext {
+    PUBLISH_GROUP_ID = 'ru.nikitazhelonkin'
+    PUBLISH_ARTIFACT_ID = 'sqlite'
+    PUBLISH_VERSION = '1.0'
 }
 
 task clean(type: Delete) {
