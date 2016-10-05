@@ -2,6 +2,12 @@
 
 Database library for Android based on SQLite
 
+### Gradle:
+
+```groovy
+compile 'ru.nikitazhelonkin:sqlite:1.0'
+```
+
 ### Usage:
 
 Create tables by implementing ```Table``` interface:
