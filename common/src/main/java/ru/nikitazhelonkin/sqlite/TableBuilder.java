@@ -8,11 +8,14 @@ public class TableBuilder {
     private String mName;
     private List<Column> mColumns;
 
-    private TableBuilder(String name) {
+    public TableBuilder(String name) {
         mName = name;
         mColumns = new ArrayList<>();
     }
 
+    public static TableBuilder create(String name) {
+        return new TableBuilder(name);
+    }
     public static TableBuilder create(Table table) {
         return new TableBuilder(table.getName());
     }

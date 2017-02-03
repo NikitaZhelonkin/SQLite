@@ -5,63 +5,52 @@ Database library for Android based on SQLite
 ### Gradle:
 
 ```groovy
-compile 'ru.nikitazhelonkin:sqlite:1.0'
+compile 'ru.nikitazhelonkin:sqlite:1.1'
 ```
 
 ### Usage:
 
-Create tables by implementing ```Table``` interface:
+Just annotate you model class as in the example below:
 
 ```java
-public class DogTable implements Table<Dog> {
+@SQLiteObject("dog_table")
+public class Dog {
 
-    public static final DogTable TABLE = new DogTable();
+    @SQLiteColumn(type = SQLiteColumn.INTEGER, primaryKey = true)
+    private long mId;
 
-    private static final String TABLE_NAME = "dog_table";
+    @SQLiteColumn(type = SQLiteColumn.TEXT)
+    private String mName;
 
-    public static final String ID = "id";
-    public static final String NAME = "name";
-    public static final String AGE = "age";
+    @SQLiteColumn(type = SQLiteColumn.INTEGER)
+    private int mAge;
 
-    @Override
+    public long getId() {
+        return mId;
+    }
+
+    public void setId(long id) {
+        mId = id;
+    }
+
     public String getName() {
-        return TABLE_NAME;
+        return mName;
     }
 
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-        db.execSQL(TableBuilder.create(this)
-                .add(Column.integer(ID).primaryKey())
-                .add(Column.text(NAME))
-                .add(Column.integer(AGE))
-                .toSql());
+    public void setName(String name) {
+        mName = name;
     }
 
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + getName());
-        onCreate(db);
+    public int getAge() {
+        return mAge;
     }
 
-    @Override
-    public ContentValues toContentValues(Dog dog) {
-        ContentValues values = new ContentValues();
-        values.put(ID, dog.getId());
-        values.put(NAME, dog.getName());
-        values.put(AGE, dog.getAge());
-        return values;
-    }
-
-    @Override
-    public Dog fromCursor(Cursor cursor) {
-        Dog dog = new Dog();
-        dog.setId(cursor.getInt(cursor.getColumnIndex(ID)));
-        dog.setName(cursor.getString(cursor.getColumnIndex(NAME)));
-        dog.setAge(cursor.getInt(cursor.getColumnIndex(AGE)));
-        return dog;
+    public void setAge(int age) {
+        mAge = age;
     }
 }
 ```
+Annotation Processor will generate ```DogTable``` class;
 
 Then override SQLiteHelper and register all tables:
 
@@ -73,7 +62,7 @@ public class MySQLiteHelper extends SQLiteHelper {
     private static final int VERSION = 1;
 
     public MySQLiteHelper(Context context) {
-        super(context, DATABASE_NAME, null, VERSION);
+        super(context, DATABASE_NAME, VERSION);
 
         registerTable(DogTable.TABLE);
     }

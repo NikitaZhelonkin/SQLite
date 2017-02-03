@@ -29,8 +29,8 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
 
     private Handler mMainHandler;
 
-    public SQLiteHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
-        super(context, name, factory, version);
+    public SQLiteHelper(Context context, String name, int version) {
+        super(context, name, new SQLiteCursorFactory(), version);
         mTables = new ArrayList<>();
         mListeners = new CopyOnWriteArrayList<>();
         mMainHandler = new Handler(Looper.getMainLooper());
@@ -38,12 +38,12 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        createTables(db);
+        createTables(new SQLiteDatabaseImpl(db));
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        upgradeTables(db, oldVersion, newVersion);
+        //do inheritance
     }
 
     protected void registerTable(Table t) {
@@ -87,7 +87,7 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         try {
             list = new ArrayList<>(cursor.getCount());
             while (cursor.moveToNext()) {
-                list.add(table.fromCursor(cursor));
+                list.add(table.fromCursor((ISQLiteCursor) cursor));
             }
             return list;
         } finally {
@@ -123,7 +123,9 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
     }
 
     public <T> int update(@NonNull Table<T> table, @NonNull Selection selection, @NonNull T object, String[] excludeUpdate) {
-        ContentValues values = excludeColumnsFromCV(table.toContentValues(object), excludeUpdate);
+        ContentValuesImpl valuesImpl = new ContentValuesImpl();
+        table.bindValues(valuesImpl, object);
+        ContentValues values = excludeColumnsFromCV(valuesImpl.getValues(), excludeUpdate);
         int rowsAffected = updateInternal(table, selection, values);
         notifyTableChangedIfNeeded(table, rowsAffected > 0);
         return rowsAffected;
@@ -182,8 +184,9 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
     private <T> long insertInternal(@NonNull Table<T> table, @NonNull T object) {
         SQLiteDatabase db = getWritableDatabase();
         try {
-            ContentValues values = table.toContentValues(object);
-            long id = db.insertWithOnConflict(table.getName(), null, values,
+            ContentValuesImpl values = new ContentValuesImpl();
+            table.bindValues(values, object);
+            long id = db.insertWithOnConflict(table.getName(), null, values.getValues(),
                     SQLiteDatabase.CONFLICT_IGNORE);
             if (id == -1) {
                 return id;
@@ -199,15 +202,9 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         return db.update(table.getName(), values, selection.selection(), selection.args());
     }
 
-    private void createTables(SQLiteDatabase db) {
+    private void createTables(SQLiteDatabaseImpl db) {
         for (Table t : mTables) {
-            t.onCreate(db);
-        }
-    }
-
-    private void upgradeTables(SQLiteDatabase db, int oldVersion, int newVersion) {
-        for (Table t : mTables) {
-            t.onUpgrade(db, oldVersion, newVersion);
+            t.create(db);
         }
     }
 
