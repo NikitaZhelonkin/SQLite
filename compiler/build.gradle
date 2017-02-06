@@ -6,6 +6,8 @@ targetCompatibility = JavaVersion.VERSION_1_7
 
 dependencies {
     compile files(Jvm.current().toolsJar)
+    compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.squareup:javapoet:1.8.0'
-    compile project(":common")
 }
+
+apply from: 'bintray.gradle'
