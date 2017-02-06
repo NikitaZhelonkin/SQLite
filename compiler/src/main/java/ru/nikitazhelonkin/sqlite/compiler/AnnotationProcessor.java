@@ -38,8 +38,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         mVisitors.put(SQLiteObject.class, new SQLiteObjectVisitor(env));
         mVisitors.put(SQLiteColumn.class, new SQLiteColumnVisitor(env));
 
-        Field.sTypes = env.getTypeUtils();
-        Field.sElements = env.getElementUtils();
+        Field.defineTypesAndElemens(env.getTypeUtils(), env.getElementUtils());
     }
 
     @Override

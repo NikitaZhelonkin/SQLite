@@ -20,9 +20,14 @@ class Field {
 
     private static final Pattern PREFIX_NAMING = Pattern.compile("^m([A-Z][a-zA-Z0-9]*)$");
 
-    static volatile Types sTypes;
+    private static volatile Types sTypes;
 
-    static volatile Elements sElements;
+    private static volatile Elements sElements;
+
+    public static void defineTypesAndElemens(Types types, Elements elements) {
+        sTypes = types;
+        sElements = elements;
+    }
 
     static boolean isLong(TypeMirror type) {
         try {
@@ -75,14 +80,6 @@ class Field {
 
     static boolean isString(TypeMirror type) {
         return isAssignable(type, String.class);
-    }
-
-    static boolean isDate(TypeMirror type) {
-        return isAssignable(type, Date.class);
-    }
-
-    static boolean isNullable(TypeMirror type) {
-        return TypeKind.DECLARED == type.getKind() || TypeKind.ARRAY == type.getKind();
     }
 
     static boolean isAssignable(TypeMirror type, Class<?> clazz) {
