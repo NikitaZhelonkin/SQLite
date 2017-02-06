@@ -17,7 +17,7 @@ import javax.lang.model.util.ElementScanner7;
  * Created by nikita on 03.02.17.
  */
 
-public class  Visitor extends ElementScanner7<Void, Map<TypeElement, TableSpec>> {
+class  Visitor extends ElementScanner7<Void, Map<TypeElement, TableSpec>> {
 
     private Trees mTrees;
 

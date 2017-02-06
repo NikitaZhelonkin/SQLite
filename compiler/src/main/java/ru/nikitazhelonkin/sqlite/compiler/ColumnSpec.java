@@ -1,12 +1,7 @@
 package ru.nikitazhelonkin.sqlite.compiler;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
-
-import ru.nikitazhelonkin.sqlite.Column;
 
 /**
  * Created by nikita on 03.02.17.
@@ -14,57 +9,41 @@ import ru.nikitazhelonkin.sqlite.Column;
 
 class ColumnSpec {
 
-    private static final Pattern PREFIX_NAMING = Pattern.compile("^m([A-Z][a-zA-Z0-9]*)$");
+    private final String mFieldName;
 
-    final String fieldName;
+    private final TypeMirror mFieldType;
 
-    final TypeMirror fieldType;
+    private final String mColumnName;
 
-    final String columnName;
+    private final String mColumnType;
 
-    final String columnDef;
+    private final boolean mIsPrimaryKey;
 
-    final boolean isPrimaryKey;
-
-    ColumnSpec(Element field, String columnName, String columnDef) {
-        this(field, columnName, columnDef, false);
+    ColumnSpec(Element field, String columnName, String columnType, boolean primaryKey) {
+        mFieldName = field.getSimpleName().toString();
+        mFieldType = field.asType();
+        mColumnName = columnName;
+        mColumnType = columnType;
+        mIsPrimaryKey = primaryKey;
     }
 
-    ColumnSpec(Element field, String columnName, String columnDef, boolean primaryKey) {
-        this.fieldName = field.getSimpleName().toString();
-        this.fieldType = field.asType();
-        this.columnName = columnName;
-        this.columnDef = columnDef;
-        this.isPrimaryKey = primaryKey;
+    public String getFieldName() {
+        return mFieldName;
     }
 
-
-    public static String columnName(String fieldName) {
-        return underscore(removePrefix(fieldName));
+    public TypeMirror getFieldType() {
+        return mFieldType;
     }
 
-    public static String setterName(String fieldName) {
-        return "set" + capitalize(removePrefix(fieldName));
+    public String getColumnName() {
+        return mColumnName;
     }
 
-    public static String getterName(String fieldName) {
-        return "get" + capitalize(removePrefix(fieldName));
+    public String getColumnType() {
+        return mColumnType;
     }
 
-    private static String removePrefix(String fieldName) {
-        final Matcher matcher = PREFIX_NAMING.matcher(fieldName);
-        if (matcher.matches()) {
-            return matcher.group(1);
-        }
-        return fieldName;
+    public boolean isPrimaryKey() {
+        return mIsPrimaryKey;
     }
-
-    private static String underscore(String value) {
-        return value.replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase();
-    }
-
-    private static String capitalize(String name) {
-        return name.substring(0, 1).toUpperCase() + name.substring(1);
-    }
-
 }

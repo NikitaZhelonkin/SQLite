@@ -1,12 +1,11 @@
 package ru.nikitazhelonkin.sqlite.compiler;
 
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 
 import ru.nikitazhelonkin.sqlite.annotation.SQLiteColumn;
 
@@ -14,7 +13,7 @@ import ru.nikitazhelonkin.sqlite.annotation.SQLiteColumn;
  * Created by nikita on 03.02.17.
  */
 
-public class SQLiteColumnVisitor extends Visitor {
+class SQLiteColumnVisitor extends Visitor {
 
     public SQLiteColumnVisitor(ProcessingEnvironment env) {
         super(env);
@@ -29,10 +28,24 @@ public class SQLiteColumnVisitor extends Visitor {
 
         String columnName = annotation.value();
         if (columnName.isEmpty()) {
-            columnName = ColumnSpec.columnName(e.getSimpleName().toString());
+            columnName = Field.columnName(e.getSimpleName().toString());
         }
 
-        spec.addColumn(new ColumnSpec(e, columnName, annotation.type(), annotation.primaryKey()));
+        String columnType;
+        final TypeMirror fieldType = e.asType();
+        if (!annotation.type().isEmpty()) {
+            columnType = annotation.type();
+        } else if (Field.isLong(fieldType) || Field.isInt(fieldType) || Field.isShort(fieldType)) {
+            columnType = SQLiteColumn.INTEGER;
+        } else if (Field.isDouble(fieldType) || Field.isFloat(fieldType)) {
+            columnType = SQLiteColumn.REAL;
+        } else if (Field.isByteArray(fieldType)) {
+            columnType = SQLiteColumn.BLOB;
+        } else {
+            columnType = SQLiteColumn.TEXT;
+        }
+
+        spec.addColumn(new ColumnSpec(e, columnName, columnType, annotation.primaryKey()));
         return super.visitVariable(e, specs);
     }
 

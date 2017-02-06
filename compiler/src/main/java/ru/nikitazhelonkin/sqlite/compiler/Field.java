@@ -1,13 +1,10 @@
 package ru.nikitazhelonkin.sqlite.compiler;
 
-import com.sun.source.util.Trees;
-import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.TreeScanner;
 
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
@@ -19,7 +16,9 @@ import javax.lang.model.util.Types;
  * Created by nikita on 03.02.17.
  */
 
-public class FieldType {
+class Field {
+
+    private static final Pattern PREFIX_NAMING = Pattern.compile("^m([A-Z][a-zA-Z0-9]*)$");
 
     static volatile Types sTypes;
 
@@ -96,6 +95,34 @@ public class FieldType {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Not a boxed primitive type", e);
         }
+    }
+
+    public static String columnName(String fieldName) {
+        return underscore(removePrefix(fieldName));
+    }
+
+    public static String setterName(String fieldName) {
+        return "set" + capitalize(removePrefix(fieldName));
+    }
+
+    public static String getterName(String fieldName) {
+        return "get" + capitalize(removePrefix(fieldName));
+    }
+
+    private static String removePrefix(String fieldName) {
+        final Matcher matcher = PREFIX_NAMING.matcher(fieldName);
+        if (matcher.matches()) {
+            return matcher.group(1);
+        }
+        return fieldName;
+    }
+
+    private static String underscore(String value) {
+        return value.replaceAll("(.)(\\p{Upper})", "$1_$2").toLowerCase();
+    }
+
+    private static String capitalize(String name) {
+        return name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
 

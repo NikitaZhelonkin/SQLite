@@ -20,7 +20,7 @@ public @interface SQLiteColumn {
 
     String value() default "";
 
-    String type() ;
+    String type() default "";
 
     boolean primaryKey() default false;
 

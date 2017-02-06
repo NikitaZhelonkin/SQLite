@@ -5,13 +5,14 @@ import java.util.Map;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
+
 import ru.nikitazhelonkin.sqlite.annotation.SQLiteObject;
 
 /**
  * Created by nikita on 03.02.17.
  */
 
-public class SQLiteObjectVisitor extends Visitor {
+class SQLiteObjectVisitor extends Visitor {
 
 
     public SQLiteObjectVisitor(ProcessingEnvironment env) {

@@ -80,13 +80,11 @@ class TableMaker {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(ISQLiteDatabase.class, "db");
         TableBuilder tableBuilder = TableBuilder.create(mTableSpec.getTableName());
-        final Iterator<ColumnSpec> iterator = mTableSpec.getColumns().iterator();
-        while (iterator.hasNext()) {
-            final ColumnSpec columnSpec = iterator.next();
+        for (ColumnSpec columnSpec : mTableSpec.getColumns()) {
             tableBuilder.add(Column.create(
-                    columnSpec.columnName,
-                    columnSpec.columnDef,
-                    columnSpec.isPrimaryKey));
+                    columnSpec.getColumnName(),
+                    columnSpec.getColumnType(),
+                    columnSpec.isPrimaryKey()));
         }
         builder.addStatement("db.execSQL($S)", tableBuilder.toSql());
         return builder.build();
@@ -99,35 +97,37 @@ class TableMaker {
                 .addParameter(ClassName.get(mTableSpec.getOriginElement()), "object")
                 .addModifiers(Modifier.PUBLIC);
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
-            builder.addStatement("values.put($L, object.$L())", columnSpec.columnName.toUpperCase(),
-                    ColumnSpec.getterName(columnSpec.fieldName));
+            builder.addStatement("values.put($L, object.$L())", columnSpec.getColumnName().toUpperCase(),
+                    Field.getterName(columnSpec.getFieldName()));
         }
         return builder.build();
     }
 
     private MethodSpec makeFromCursorMethod() {
         final ClassName originClass = ClassName.get(mTableSpec.getOriginElement());
-        MethodSpec.Builder builder =  MethodSpec.methodBuilder("fromCursor")
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("fromCursor")
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(originClass)
                 .addParameter(ISQLiteCursor.class, "cursor");
         builder.addStatement("final $1T object = new $1T()", originClass);
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
-            if (FieldType.isLong(columnSpec.fieldType)
-                    || FieldType.isInt(columnSpec.fieldType)
-                    || FieldType.isShort(columnSpec.fieldType)) {
+            if (Field.isLong(columnSpec.getFieldType())
+                    || Field.isInt(columnSpec.getFieldType())
+                    || Field.isShort(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L(($T) cursor.getLong(cursor.getColumnIndex($L)))",
-                        ColumnSpec.setterName(columnSpec.fieldName), columnSpec.fieldType, columnSpec.columnName.toUpperCase());
-            }
-            else if (FieldType.isDouble(columnSpec.fieldType)
-                    || FieldType.isFloat(columnSpec.fieldType)) {
-                builder.addStatement("object.$L(($T) cursor.getDouble(cursor.getColumnIndex($L)))", ColumnSpec.setterName(columnSpec.fieldName),
-                        columnSpec.fieldType, columnSpec.columnName.toUpperCase());
-            } else if (FieldType.isByteArray(columnSpec.fieldType)) {
-                builder.addStatement("object.$L(cursor.getBlob(cursor.getColumnIndex($L)))", ColumnSpec.setterName(columnSpec.fieldName), columnSpec.columnName.toUpperCase());
-            } else if (FieldType.isString(columnSpec.fieldType)) {
-                builder.addStatement("object.$L(cursor.getString(cursor.getColumnIndex($L)))", ColumnSpec.setterName(columnSpec.fieldName), columnSpec.columnName.toUpperCase());
+                        Field.setterName(columnSpec.getFieldName()), columnSpec.getFieldType(), columnSpec.getColumnName().toUpperCase());
+            } else if (Field.isDouble(columnSpec.getFieldType())
+                    || Field.isFloat(columnSpec.getFieldType())) {
+                builder.addStatement("object.$L(($T) cursor.getDouble(cursor.getColumnIndex($L)))",
+                        Field.setterName(columnSpec.getFieldName()),
+                        columnSpec.getFieldType(), columnSpec.getColumnName().toUpperCase());
+            } else if (Field.isByteArray(columnSpec.getFieldType())) {
+                builder.addStatement("object.$L(cursor.getBlob(cursor.getColumnIndex($L)))",
+                        Field.setterName(columnSpec.getFieldName()), columnSpec.getColumnName().toUpperCase());
+            } else if (Field.isString(columnSpec.getFieldType())) {
+                builder.addStatement("object.$L(cursor.getString(cursor.getColumnIndex($L)))",
+                        Field.setterName(columnSpec.getFieldName()), columnSpec.getColumnName().toUpperCase());
             }
         }
         builder.addStatement("return object");
@@ -141,9 +141,9 @@ class TableMaker {
     }
 
     private FieldSpec makeColumnNameField(ColumnSpec columnSpec) {
-        return FieldSpec.builder(String.class, columnSpec.columnName.toUpperCase())
+        return FieldSpec.builder(String.class, columnSpec.getColumnName().toUpperCase())
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                .initializer("$S", columnSpec.columnName)
+                .initializer("$S", columnSpec.getColumnName())
                 .build();
     }
 }

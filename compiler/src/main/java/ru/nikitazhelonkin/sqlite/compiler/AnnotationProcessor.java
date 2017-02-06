@@ -1,7 +1,6 @@
 package ru.nikitazhelonkin.sqlite.compiler;
 
 import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.TypeName;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;
@@ -25,7 +24,9 @@ import ru.nikitazhelonkin.sqlite.annotation.SQLiteObject;
  * Created by nikita on 03.02.17.
  */
 
-@SupportedAnnotationTypes({"ru.nikitazhelonkin.sqlite.annotation.SQLiteObject"})
+@SupportedAnnotationTypes({
+        "ru.nikitazhelonkin.sqlite.annotation.SQLiteObject",
+        "ru.nikitazhelonkin.sqlite.annotation.SQLiteColumn"})
 public class AnnotationProcessor extends AbstractProcessor {
 
     private final Map<Class<? extends Annotation>, Visitor> mVisitors = new LinkedHashMap<>();
@@ -37,8 +38,8 @@ public class AnnotationProcessor extends AbstractProcessor {
         mVisitors.put(SQLiteObject.class, new SQLiteObjectVisitor(env));
         mVisitors.put(SQLiteColumn.class, new SQLiteColumnVisitor(env));
 
-        FieldType.sTypes = env.getTypeUtils();
-        FieldType.sElements = env.getElementUtils();
+        Field.sTypes = env.getTypeUtils();
+        Field.sElements = env.getElementUtils();
     }
 
     @Override
@@ -59,21 +60,17 @@ public class AnnotationProcessor extends AbstractProcessor {
             }
         }
 
-        final Map<TypeElement, JavaFile> javaFiles = new LinkedHashMap<>();
         Filer filer = processingEnv.getFiler();
         for (final Map.Entry<TypeElement, TableSpec> entry : specs.entrySet()) {
             final TypeElement typeElement = entry.getKey();
             final TableSpec tableSpec = entry.getValue();
             try {
                 final JavaFile javaFile = new TableMaker(tableSpec).brewJavaFile();
-                javaFiles.put(typeElement, javaFile);
                 javaFile.writeTo(filer);
             } catch (Exception e) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e.getMessage(), typeElement);
             }
         }
-
-
         return true;
     }
 

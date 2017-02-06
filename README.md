@@ -5,7 +5,8 @@ Database library for Android based on SQLite
 ### Gradle:
 
 ```groovy
-compile 'ru.nikitazhelonkin:sqlite:1.1'
+compile 'ru.nikitazhelonkin:sqlite:1.1.1'
+compile 'ru.nikitazhelonkin:sqlite-compiler:1.1.1'
 ```
 
 ### Usage:
@@ -16,13 +17,13 @@ Just annotate you model class as in the example below:
 @SQLiteObject("dog_table")
 public class Dog {
 
-    @SQLiteColumn(type = SQLiteColumn.INTEGER, primaryKey = true)
+    @SQLiteColumn(primaryKey = true)
     private long mId;
 
-    @SQLiteColumn(type = SQLiteColumn.TEXT)
+    @SQLiteColumn
     private String mName;
 
-    @SQLiteColumn(type = SQLiteColumn.INTEGER)
+    @SQLiteColumn
     private int mAge;
 
     public long getId() {
@@ -64,7 +65,7 @@ public class MySQLiteHelper extends SQLiteHelper {
     public MySQLiteHelper(Context context) {
         super(context, DATABASE_NAME, VERSION);
 
-        registerTable(DogTable.TABLE);
+        registerTable(DogTable.INSTANCE);
     }
 }
 ```
@@ -78,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        MySQLiteHelper sqLiteHelper = MySQLiteHelper.get(this);
+        MySQLiteHelper helper = MySQLiteHelper.get(this);
     }
 }
 ```
@@ -86,28 +87,28 @@ public class MainActivity extends AppCompatActivity {
 ### Query
 
 ```java
-Dog guffy = sqLiteHelper.queryFirst(DogTable.TABLE, Selection.create().equals(DogTable.NAME, "Guffy" ));
+Dog guffy = helper.queryFirst(DogTable.INSTANCE, Selection.create().equals(DogTable.NAME, "Guffy" ));
 
-List<Dog> allDogs = sqLiteHelper.query(DogTable.TABLE);
+List<Dog> allDogs = helper.query(DogTable.INSTANCE);
 
-List<Dog> puppies  = sqLiteHelper.query(DogTable.TABLE, Selection.create().lessThanOrEquals(DogTable.AGE, 1));
+List<Dog> puppies  = helper.query(DogTable.INSTANCE, Selection.create().lessThanOrEquals(DogTable.AGE, 1));
 ``````
 
 ### Insert
 
 ```java
 Dog dog = new Dog(1, "Guffy", 1);
-sqLiteHelper.insert(DogTable.TABLE, dog);
+helper.insert(DogTable.INSTANCE, dog);
 ```
 
 ### Delete
 
 ```java
-sqLiteHelper.delete(DogTable.TABLE, Selection.create().equals(DogTable.ID, dog.getId()));
+helper.delete(DogTable.INSTANCE, Selection.create().equals(DogTable.ID, dog.getId()));
 ```
 
 ### Update
 
 ```java
-sqLiteHelper.update(DogTable.TABLE, Selection.create().equals(DogTable.ID, dog.getId()), dog);
+helper.update(DogTable.INSTANCE, Selection.create().equals(DogTable.ID, dog.getId()), dog);
 ```
