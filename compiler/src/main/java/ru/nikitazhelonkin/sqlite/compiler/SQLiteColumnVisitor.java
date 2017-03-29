@@ -35,7 +35,7 @@ class SQLiteColumnVisitor extends Visitor {
         final TypeMirror fieldType = e.asType();
         if (!annotation.type().isEmpty()) {
             columnType = annotation.type();
-        } else if (Field.isLong(fieldType) || Field.isInt(fieldType) || Field.isShort(fieldType)) {
+        } else if (Field.isLong(fieldType) || Field.isInt(fieldType) || Field.isBoolean(fieldType) || Field.isShort(fieldType)) {
             columnType = SQLiteColumn.INTEGER;
         } else if (Field.isDouble(fieldType) || Field.isFloat(fieldType)) {
             columnType = SQLiteColumn.REAL;

@@ -33,7 +33,7 @@ class TableMaker {
         mTableSpec = spec;
     }
 
-    JavaFile brewJavaFile(){
+    JavaFile brewJavaFile() {
         final TypeElement originElement = mTableSpec.getOriginElement();
         final ClassName originClass = ClassName.get(originElement);
         final ClassName tableClass = mTableSpec.getClassName();
@@ -61,7 +61,7 @@ class TableMaker {
                 .build();
     }
 
-    private TypeName baseTable(ClassName originClass){
+    private TypeName baseTable(ClassName originClass) {
         return ParameterizedTypeName.get(ClassName.get(Table.class), originClass);
     }
 
@@ -117,6 +117,9 @@ class TableMaker {
                     || Field.isShort(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L(($T) cursor.getLong(cursor.getColumnIndex($L)))",
                         Field.setterName(columnSpec.getFieldName()), columnSpec.getFieldType(), columnSpec.getColumnName().toUpperCase());
+            } else if (Field.isBoolean(columnSpec.getFieldType())) {
+                builder.addStatement("object.$L(cursor.getLong(cursor.getColumnIndex($L)) == 1)",
+                        Field.setterName(columnSpec.getFieldName()), columnSpec.getColumnName().toUpperCase());
             } else if (Field.isDouble(columnSpec.getFieldType())
                     || Field.isFloat(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L(($T) cursor.getDouble(cursor.getColumnIndex($L)))",
@@ -134,7 +137,7 @@ class TableMaker {
         return builder.build();
     }
 
-    private void addColumnsFields(TypeSpec.Builder builder){
+    private void addColumnsFields(TypeSpec.Builder builder) {
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
             builder.addField(makeColumnNameField(columnSpec));
         }

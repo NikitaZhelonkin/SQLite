@@ -107,14 +107,30 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         return list.size() > 0 ? list.get(0) : null;
     }
 
+    public <T> long insertOrReplace(@NonNull Table<T> table, @NonNull T object) {
+        return insert(table, object, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    public <T> void insertOrReplace(@NonNull Table<T> table, @NonNull Iterable<T> objects) {
+        insert(table, objects, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
     public <T> long insert(@NonNull Table<T> table, @NonNull T object) {
-        long id = insertInternal(table, object);
+        return insert(table, object, SQLiteDatabase.CONFLICT_IGNORE);
+    }
+
+    public <T> void insert(@NonNull Table<T> table, @NonNull Iterable<T> objects) {
+        insert(table, objects, SQLiteDatabase.CONFLICT_IGNORE);
+    }
+
+    public <T> long insert(@NonNull Table<T> table, @NonNull T object, int conflictAlgorithm) {
+        long id = insertInternal(table, object, conflictAlgorithm);
         notifyTableChangedIfNeeded(table, id != -1);
         return id;
     }
 
-    public <T> void insert(@NonNull Table<T> table, @NonNull Iterable<T> objects) {
-        insertInternal(table, objects);
+    public <T> void insert(@NonNull Table<T> table, @NonNull Iterable<T> objects, int conflictAlgorithm) {
+        insertInternal(table, objects, conflictAlgorithm);
         notifyTableChanged(table);
     }
 
@@ -168,12 +184,12 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         }
     }
 
-    private <T> void insertInternal(@NonNull Table<T> table, @NonNull Iterable<T> objects) {
+    private <T> void insertInternal(@NonNull Table<T> table, @NonNull Iterable<T> objects, int conflictAlgorithm) {
         SQLiteDatabase db = getWritableDatabase();
         try {
             db.beginTransaction();
             for (T obj : objects) {
-                insertInternal(table, obj);
+                insertInternal(table, obj, conflictAlgorithm);
             }
             db.setTransactionSuccessful();
         } finally {
@@ -181,13 +197,13 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         }
     }
 
-    private <T> long insertInternal(@NonNull Table<T> table, @NonNull T object) {
+    private <T> long insertInternal(@NonNull Table<T> table, @NonNull T object, int conflictAlgorithm) {
         SQLiteDatabase db = getWritableDatabase();
         try {
             ContentValuesImpl values = new ContentValuesImpl();
             table.bindValues(values, object);
             long id = db.insertWithOnConflict(table.getName(), null, values.getValues(),
-                    SQLiteDatabase.CONFLICT_IGNORE);
+                    conflictAlgorithm);
             if (id == -1) {
                 return id;
             }

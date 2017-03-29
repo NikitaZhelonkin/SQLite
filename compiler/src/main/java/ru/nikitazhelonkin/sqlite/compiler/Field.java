@@ -56,6 +56,16 @@ class Field {
         }
     }
 
+    static boolean isBoolean(TypeMirror type) {
+        try {
+            return TypeKind.BOOLEAN == type.getKind()
+                    || TypeKind.BOOLEAN == unbox(type).getKind();
+        } catch (IllegalArgumentException ignored) {
+            return false;
+        }
+    }
+
+
     static boolean isDouble(TypeMirror type) {
         try {
             return TypeKind.DOUBLE == type.getKind()
