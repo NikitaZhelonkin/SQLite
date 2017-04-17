@@ -26,4 +26,8 @@ public @interface SQLiteColumn {
 
     boolean autoincrement() default false;
 
+    boolean unique() default false;
+
+    boolean notnull() default false;
+
 }

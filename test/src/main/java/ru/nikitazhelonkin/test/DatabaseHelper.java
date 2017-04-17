@@ -18,6 +18,8 @@ public class DatabaseHelper extends SQLiteHelper {
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, VERSION);
 
+        setLogEnabled(true);
+
         registerTable(DogTable.INSTANCE);
     }
 }

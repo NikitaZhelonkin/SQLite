@@ -85,7 +85,10 @@ class TableMaker {
                     columnSpec.getColumnName(),
                     columnSpec.getColumnType(),
                     columnSpec.isPrimaryKey(),
-                    columnSpec.isAutoincrement()));
+                    columnSpec.isAutoincrement(),
+                    columnSpec.isUnique(),
+                    columnSpec.isNotNull()
+            ));
         }
         builder.addStatement("db.execSQL($S)", tableBuilder.toSql());
         return builder.build();

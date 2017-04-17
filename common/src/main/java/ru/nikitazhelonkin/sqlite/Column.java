@@ -11,16 +11,19 @@ public class Column {
     private boolean mIsPrimaryKey;
     private boolean mIsAutoincrement;
     private boolean mIsNotNull;
+    private boolean mIsUnique;
 
     private Column(String name, String type) {
-        this(name, type, false, false);
+        this(name, type, false, false, false, false);
     }
 
-    private Column(String name, String type, boolean isPrimaryKey, boolean isAutoincrement) {
+    private Column(String name, String type, boolean isPrimaryKey, boolean isAutoincrement, boolean isUnique, boolean isNotNull) {
         this.mName = name;
         this.mType = type;
         this.mIsPrimaryKey = isPrimaryKey;
         this.mIsAutoincrement = isAutoincrement;
+        this.mIsUnique = isUnique;
+        this.mIsNotNull = isNotNull;
     }
 
     public static Column integer(String name) {
@@ -43,8 +46,8 @@ public class Column {
         return new Column(name, type);
     }
 
-    public static Column create(String name, String type, boolean isPrimaryKey, boolean isAutoincrement) {
-        return new Column(name, type, isPrimaryKey, isAutoincrement);
+    public static Column create(String name, String type, boolean isPrimaryKey, boolean isAutoincrement, boolean isUnique, boolean isNotNull) {
+        return new Column(name, type, isPrimaryKey, isAutoincrement, isUnique, isNotNull);
     }
 
     public Column primaryKey() {
@@ -62,11 +65,17 @@ public class Column {
         return this;
     }
 
+    public Column unique(){
+        mIsUnique = true;
+        return this;
+    }
+
     public String toSql() {
         StringBuilder builder = new StringBuilder(mName).append(" ").append(mType);
         if (mIsNotNull) builder.append(" NOT NULL");
         if (mIsPrimaryKey) builder.append(" PRIMARY KEY");
         if (mIsAutoincrement) builder.append(" AUTOINCREMENT");
+        if (mIsUnique) builder.append(" UNIQUE");
         return builder.toString();
     }
 

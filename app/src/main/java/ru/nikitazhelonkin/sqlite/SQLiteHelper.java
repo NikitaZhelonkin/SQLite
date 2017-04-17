@@ -11,6 +11,7 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -18,6 +19,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class SQLiteHelper extends SQLiteOpenHelper {
+
+    private static final String TAG  = SQLiteHelper.class.getSimpleName();
 
     public interface OnChangeListener<T> {
         void onChange(Table<T> table);
@@ -29,11 +32,17 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
 
     private Handler mMainHandler;
 
+    private boolean mLogEnabled = false;
+
     public SQLiteHelper(Context context, String name, int version) {
         super(context, name, new SQLiteCursorFactory(), version);
         mTables = new ArrayList<>();
         mListeners = new CopyOnWriteArrayList<>();
         mMainHandler = new Handler(Looper.getMainLooper());
+    }
+
+    public void setLogEnabled(boolean logEnabled) {
+        mLogEnabled = logEnabled;
     }
 
     @Override
@@ -116,11 +125,11 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
     }
 
     public <T> long insert(@NonNull Table<T> table, @NonNull T object) {
-        return insert(table, object, SQLiteDatabase.CONFLICT_IGNORE);
+        return insert(table, object, SQLiteDatabase.CONFLICT_NONE);
     }
 
     public <T> void insert(@NonNull Table<T> table, @NonNull Iterable<T> objects) {
-        insert(table, objects, SQLiteDatabase.CONFLICT_IGNORE);
+        insert(table, objects, SQLiteDatabase.CONFLICT_NONE);
     }
 
     public <T> long insert(@NonNull Table<T> table, @NonNull T object, int conflictAlgorithm) {
@@ -209,6 +218,7 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
             }
             return id;
         } catch (SQLiteException e) {
+            log(e.getMessage());
             return -1;
         }
     }
@@ -245,6 +255,12 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
             }
         }
         return false;
+    }
+
+    private void log(String message) {
+        if (mLogEnabled) {
+            Log.e(TAG, message);
+        }
     }
 
 }
