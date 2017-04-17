@@ -21,9 +21,6 @@ public class Dog {
     @SQLiteColumn
     private int mAge;
 
-    @SQLiteColumn
-    private boolean mBoolean;
-
     public Dog() {
 
     }
@@ -31,7 +28,6 @@ public class Dog {
     public Dog(String name) {
         mName = name;
     }
-
 
     public long getId() {
         return mId;
@@ -57,11 +53,4 @@ public class Dog {
         mAge = age;
     }
 
-    public void setBoolean(boolean aBoolean) {
-        mBoolean = aBoolean;
-    }
-
-    public boolean getBoolean() {
-        return mBoolean;
-    }
 }

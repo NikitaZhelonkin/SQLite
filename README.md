@@ -17,14 +17,18 @@ Just annotate you model class as in the example below:
 @SQLiteObject("dog_table")
 public class Dog {
 
-    @SQLiteColumn(primaryKey = true)
+    @SQLiteColumn(primaryKey = true, autoincrement = true)
     private long mId;
 
-    @SQLiteColumn
+    @SQLiteColumn(unique = true, notnull = true)
     private String mName;
 
     @SQLiteColumn
     private int mAge;
+
+    public Dog(String name) {
+        mName = name;
+    }
 
     public long getId() {
         return mId;
@@ -49,6 +53,7 @@ public class Dog {
     public void setAge(int age) {
         mAge = age;
     }
+
 }
 ```
 Annotation Processor will generate ```DogTable``` class;
