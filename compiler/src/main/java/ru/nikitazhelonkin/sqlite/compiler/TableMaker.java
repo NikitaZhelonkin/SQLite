@@ -98,8 +98,10 @@ class TableMaker {
                 .addParameter(ClassName.get(mTableSpec.getOriginElement()), "object")
                 .addModifiers(Modifier.PUBLIC);
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
-            builder.addStatement("values.put($L, object.$L())", columnSpec.getColumnName().toUpperCase(),
-                    Field.getterName(columnSpec.getFieldName()));
+            if(!columnSpec.isAutoincrement()){
+                builder.addStatement("values.put($L, object.$L())", columnSpec.getColumnName().toUpperCase(),
+                        Field.getterName(columnSpec.getFieldName()));
+            }
         }
         return builder.build();
     }

@@ -20,10 +20,9 @@ public class MainActivity extends AppCompatActivity {
 
         DatabaseHelper databaseHelper = new DatabaseHelper(this);
 
-        List<Dog> dogList = new ArrayList<>();
         for (int i = 0; i < 15; i++) {
-            dogList.add(new Dog(i));
+            long id = databaseHelper.insert(DogTable.INSTANCE, new Dog());
+            Log.e("TAG", String.valueOf(id));
         }
-        databaseHelper.insert(DogTable.INSTANCE, dogList);
     }
 }

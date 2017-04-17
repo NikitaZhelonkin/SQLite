@@ -12,7 +12,7 @@ import ru.nikitazhelonkin.sqlite.annotation.SQLiteObject;
 @SQLiteObject("dog_table")
 public class Dog {
 
-    @SQLiteColumn(primaryKey = true)
+    @SQLiteColumn(primaryKey = true, autoincrement = true)
     private long mId;
 
     @SQLiteColumn
