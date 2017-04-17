@@ -24,4 +24,6 @@ public @interface SQLiteColumn {
 
     boolean primaryKey() default false;
 
+    boolean autoincrement() default false;
+
 }

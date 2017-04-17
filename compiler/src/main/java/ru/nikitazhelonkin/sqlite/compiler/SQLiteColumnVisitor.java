@@ -45,7 +45,7 @@ class SQLiteColumnVisitor extends Visitor {
             columnType = SQLiteColumn.TEXT;
         }
 
-        spec.addColumn(new ColumnSpec(e, columnName, columnType, annotation.primaryKey()));
+        spec.addColumn(new ColumnSpec(e, columnName, columnType, annotation.primaryKey(), annotation.autoincrement()));
         return super.visitVariable(e, specs);
     }
 

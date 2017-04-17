@@ -24,6 +24,14 @@ public class Dog {
     @SQLiteColumn
     private boolean mBoolean;
 
+    public Dog(){
+
+    }
+
+    public Dog(long id){
+        mId = id;
+    }
+
     public long getId() {
         return mId;
     }

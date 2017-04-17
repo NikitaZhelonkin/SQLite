@@ -13,13 +13,14 @@ public class Column {
     private boolean mIsNotNull;
 
     private Column(String name, String type) {
-        this(name, type, false);
+        this(name, type, false, false);
     }
 
-    private Column(String name, String type, boolean isPrimaryKey) {
+    private Column(String name, String type, boolean isPrimaryKey, boolean isAutoincrement) {
         this.mName = name;
         this.mType = type;
         this.mIsPrimaryKey = isPrimaryKey;
+        this.mIsAutoincrement = isAutoincrement;
     }
 
     public static Column integer(String name) {
@@ -42,8 +43,8 @@ public class Column {
         return new Column(name, type);
     }
 
-    public static Column create(String name, String type, boolean isPrimaryKey) {
-        return new Column(name, type, isPrimaryKey);
+    public static Column create(String name, String type, boolean isPrimaryKey, boolean isAutoincrement) {
+        return new Column(name, type, isPrimaryKey, isAutoincrement);
     }
 
     public Column primaryKey() {

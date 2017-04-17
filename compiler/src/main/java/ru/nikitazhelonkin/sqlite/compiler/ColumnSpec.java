@@ -19,12 +19,15 @@ class ColumnSpec {
 
     private final boolean mIsPrimaryKey;
 
-    ColumnSpec(Element field, String columnName, String columnType, boolean primaryKey) {
+    private final boolean mIsAutoincrement;
+
+    ColumnSpec(Element field, String columnName, String columnType, boolean primaryKey, boolean autoincrement) {
         mFieldName = field.getSimpleName().toString();
         mFieldType = field.asType();
         mColumnName = columnName;
         mColumnType = columnType;
         mIsPrimaryKey = primaryKey;
+        mIsAutoincrement = autoincrement;
     }
 
     public String getFieldName() {
@@ -45,5 +48,9 @@ class ColumnSpec {
 
     public boolean isPrimaryKey() {
         return mIsPrimaryKey;
+    }
+
+    public boolean isAutoincrement() {
+        return mIsAutoincrement;
     }
 }
