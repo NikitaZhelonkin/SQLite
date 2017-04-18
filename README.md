@@ -75,20 +75,6 @@ public class MySQLiteHelper extends SQLiteHelper {
 }
 ```
 
-Then create instance of your SQLiteHelper using dependency injection or make it singleton:
-
-```java
-public class MainActivity extends AppCompatActivity {
-
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        MySQLiteHelper helper = MySQLiteHelper.get(this);
-    }
-}
-```
-
 ### Query
 
 ```java
