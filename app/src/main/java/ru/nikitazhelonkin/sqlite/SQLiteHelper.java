@@ -77,6 +77,12 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         }
     }
 
+    public <T> List<T> rawQuery(@NonNull Table<T> table, String sql, String[] selectionArgs) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(sql, selectionArgs);
+        return mapToList(table, cursor);
+    }
+
     @NonNull
     public <T> List<T> query(@NonNull Table<T> table) {
         return query(table, Selection.create());
@@ -84,24 +90,10 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
 
     @NonNull
     public <T> List<T> query(@NonNull Table<T> table, Selection selection) {
-        List<T> list = new ArrayList<>();
-
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.query(table.getName(), null, selection.selection(), selection.args(),
+        Cursor cursor = db.query(table.getName(), selection.columns(), selection.selection(), selection.args(),
                 selection.groupBy(), selection.having(), selection.orderBy(), selection.limit());
-
-        if (cursor == null) {
-            return list;
-        }
-        try {
-            list = new ArrayList<>(cursor.getCount());
-            while (cursor.moveToNext()) {
-                list.add(table.fromCursor((ISQLiteCursor) cursor));
-            }
-            return list;
-        } finally {
-            cursor.close();
-        }
+        return mapToList(table, cursor);
     }
 
     @Nullable
@@ -231,6 +223,23 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
     private void createTables(SQLiteDatabaseImpl db) {
         for (Table t : mTables) {
             t.create(db);
+        }
+    }
+
+    private <T> List<T> mapToList(@NonNull Table<T> table, Cursor cursor){
+        List<T> list = new ArrayList<>();
+
+        if (cursor == null) {
+            return list;
+        }
+        try {
+            list = new ArrayList<>(cursor.getCount());
+            while (cursor.moveToNext()) {
+                list.add(table.fromCursor((ISQLiteCursor) cursor));
+            }
+            return list;
+        } finally {
+            cursor.close();
         }
     }
 

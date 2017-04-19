@@ -15,7 +15,7 @@ public class Dog {
     @SQLiteColumn(primaryKey = true, autoincrement = true)
     private long mId;
 
-    @SQLiteColumn(unique = true, notnull = true)
+    @SQLiteColumn(notnull = true)
     private String mName;
 
     @SQLiteColumn
@@ -25,8 +25,9 @@ public class Dog {
 
     }
 
-    public Dog(String name) {
+    public Dog(String name, int age) {
         mName = name;
+        mAge = age;
     }
 
     public long getId() {

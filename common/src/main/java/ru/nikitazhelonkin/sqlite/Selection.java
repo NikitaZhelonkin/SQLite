@@ -33,6 +33,7 @@ public class Selection {
     private String mGroupBy;
     private String mHaving;
     private String mLimit;
+    private String[] mColumns;
 
     public static Selection create(){
         return new Selection();
@@ -69,6 +70,15 @@ public class Selection {
 
     String limit() {
         return mLimit;
+    }
+
+    String[] columns(){
+        return mColumns;
+    }
+
+    public Selection columns(String[] columns){
+        mColumns = columns;
+        return this;
     }
 
     public Selection equals(String column, Object... value) {
