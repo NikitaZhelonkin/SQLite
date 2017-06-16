@@ -87,8 +87,8 @@ class TableMaker {
                     columnSpec.isPrimaryKey(),
                     columnSpec.isAutoincrement(),
                     columnSpec.isUnique(),
-                    columnSpec.isNotNull()
-            ));
+                    columnSpec.isNotNull())
+            .references(columnSpec.getReferences()));
         }
         builder.addStatement("db.execSQL($S)", tableBuilder.toSql());
         return builder.build();

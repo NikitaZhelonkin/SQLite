@@ -25,7 +25,9 @@ class ColumnSpec {
 
     private final boolean mNotNull;
 
-    ColumnSpec(Element field, String columnName, String columnType, boolean primaryKey, boolean autoincrement, boolean unique, boolean notNull) {
+    private final String mReferences;
+
+    ColumnSpec(Element field, String columnName, String columnType, boolean primaryKey, boolean autoincrement, boolean unique, boolean notNull, String references) {
         mFieldName = field.getSimpleName().toString();
         mFieldType = field.asType();
         mColumnName = columnName;
@@ -34,6 +36,7 @@ class ColumnSpec {
         mIsAutoincrement = autoincrement;
         mUnique = unique;
         mNotNull = notNull;
+        mReferences = references;
     }
 
     public String getFieldName() {
@@ -66,5 +69,9 @@ class ColumnSpec {
 
     public boolean isNotNull() {
         return mNotNull;
+    }
+
+    public String getReferences(){
+        return mReferences;
     }
 }

@@ -19,7 +19,7 @@ ext {
     PUBLISH_GROUP_ID = 'ru.nikitazhelonkin'
     PUBLISH_ARTIFACT_ID = 'sqlite'
     PUBLISH_COMPILER_ARTIFACT_ID = 'sqlite-compiler'
-    PUBLISH_VERSION = '1.6'
+    PUBLISH_VERSION = '1.7'
 }
 
 task clean(type: Delete) {

@@ -21,13 +21,17 @@ public class Dog {
     @SQLiteColumn
     private int mAge;
 
+    @SQLiteColumn(references = "dog_owner_table(id) ON DELETE CASCADE")
+    private long mDogOwnerId;
+
     public Dog() {
 
     }
 
-    public Dog(String name, int age) {
+    public Dog(String name, int age, long dogOwnerId) {
         mName = name;
         mAge = age;
+        mDogOwnerId = dogOwnerId;
     }
 
     public long getId() {
@@ -54,4 +58,20 @@ public class Dog {
         mAge = age;
     }
 
+    public void setDogOwnerId(long dogOwnerId) {
+        mDogOwnerId = dogOwnerId;
+    }
+
+    public long getDogOwnerId() {
+        return mDogOwnerId;
+    }
+
+    @Override
+    public String toString() {
+        return "Dog{" +
+                "mId=" + mId +
+                ", mName='" + mName + '\'' +
+                ", mAge=" + mAge +
+                '}';
+    }
 }

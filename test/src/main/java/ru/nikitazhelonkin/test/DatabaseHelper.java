@@ -1,6 +1,7 @@
 package ru.nikitazhelonkin.test;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 
 import ru.nikitazhelonkin.sqlite.SQLiteHelper;
 
@@ -20,6 +21,16 @@ public class DatabaseHelper extends SQLiteHelper {
 
         setLogEnabled(true);
 
+        registerTable(DogOwnerTable.INSTANCE);
         registerTable(DogTable.INSTANCE);
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        if (!db.isReadOnly()) {
+            // Enable foreign key constraints
+            db.execSQL("PRAGMA foreign_keys=ON;");
+        }
     }
 }

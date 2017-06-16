@@ -30,4 +30,6 @@ public @interface SQLiteColumn {
 
     boolean notnull() default false;
 
+    String references() default "";
+
 }

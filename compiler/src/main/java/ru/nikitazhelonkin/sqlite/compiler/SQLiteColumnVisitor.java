@@ -49,7 +49,8 @@ class SQLiteColumnVisitor extends Visitor {
                 annotation.primaryKey(),
                 annotation.autoincrement(),
                 annotation.unique(),
-                annotation.notnull()
+                annotation.notnull(),
+                annotation.references()
         ));
         return super.visitVariable(e, specs);
     }

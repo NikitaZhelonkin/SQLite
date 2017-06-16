@@ -12,6 +12,7 @@ public class Column {
     private boolean mIsAutoincrement;
     private boolean mIsNotNull;
     private boolean mIsUnique;
+    private String mReferences;
 
     private Column(String name, String type) {
         this(name, type, false, false, false, false);
@@ -70,12 +71,18 @@ public class Column {
         return this;
     }
 
+    public Column references(String reference){
+        mReferences =reference;
+        return this;
+    }
+
     public String toSql() {
         StringBuilder builder = new StringBuilder(mName).append(" ").append(mType);
         if (mIsNotNull) builder.append(" NOT NULL");
         if (mIsPrimaryKey) builder.append(" PRIMARY KEY");
         if (mIsAutoincrement) builder.append(" AUTOINCREMENT");
         if (mIsUnique) builder.append(" UNIQUE");
+        if (!TextUtils.isEmpty(mReferences)) builder.append(" REFERENCES ").append(mReferences);
         return builder.toString();
     }
 
