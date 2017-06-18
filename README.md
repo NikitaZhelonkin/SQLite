@@ -5,8 +5,8 @@ Database library for Android based on SQLite
 ### Gradle:
 
 ```groovy
-compile 'ru.nikitazhelonkin:sqlite:1.6'
-compile 'ru.nikitazhelonkin:sqlite-compiler:1.6'
+compile 'ru.nikitazhelonkin:sqlite:1.7'
+compile 'ru.nikitazhelonkin:sqlite-compiler:1.7'
 ```
 
 ### Usage:
@@ -25,6 +25,9 @@ public class Dog {
 
     @SQLiteColumn
     private int mAge;
+
+    @SQLiteColumn(references = "dog_owner_table(id) ON DELETE CASCADE")
+    private long mDogOwnerId;
 
     public Dog(String name) {
         mName = name;
@@ -52,6 +55,14 @@ public class Dog {
 
     public void setAge(int age) {
         mAge = age;
+    }
+
+    public void setDogOwnerId(long dogOwnerId) {
+        mDogOwnerId = dogOwnerId;
+    }
+
+    public long getDogOwnerId() {
+        return mDogOwnerId;
     }
 
 }
