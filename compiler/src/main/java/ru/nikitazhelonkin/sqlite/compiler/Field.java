@@ -88,6 +88,10 @@ class Field {
         return TypeKind.ARRAY == type.getKind() && TypeKind.BYTE == ((ArrayType) type).getComponentType().getKind();
     }
 
+    static boolean isStringArray(TypeMirror type) {
+        return TypeKind.ARRAY == type.getKind() && isString(((ArrayType) type).getComponentType());
+    }
+
     static boolean isString(TypeMirror type) {
         return isAssignable(type, String.class);
     }

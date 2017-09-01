@@ -13,6 +13,7 @@ import java.util.Iterator;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 
+import ru.nikitazhelonkin.sqlite.ArrayUtils;
 import ru.nikitazhelonkin.sqlite.Column;
 import ru.nikitazhelonkin.sqlite.IContentValues;
 import ru.nikitazhelonkin.sqlite.ISQLiteCursor;
@@ -101,10 +102,20 @@ class TableMaker {
                 .addParameter(ClassName.get(mTableSpec.getOriginElement()), "object")
                 .addModifiers(Modifier.PUBLIC);
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
-            if(!columnSpec.isAutoincrement()){
-                builder.addStatement("values.put($L, object.$L())", columnSpec.getColumnName().toUpperCase(),
+            if(columnSpec.isAutoincrement()){
+               continue;
+            }
+            if (Field.isStringArray(columnSpec.getFieldType())) {
+                builder.addStatement("values.put($L, $T.join(object.$L(), $S))", columnSpec.getColumnName().toUpperCase(),
+                        ArrayUtils.class,
+                        Field.getterName(columnSpec.getFieldName()),
+                        ", ");
+            } else {
+                builder.addStatement("values.put($L, object.$L())",
+                        columnSpec.getColumnName().toUpperCase(),
                         Field.getterName(columnSpec.getFieldName()));
             }
+
         }
         return builder.build();
     }
@@ -118,7 +129,13 @@ class TableMaker {
                 .addParameter(ISQLiteCursor.class, "cursor");
         builder.addStatement("final $1T object = new $1T()", originClass);
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
-            if (Field.isLong(columnSpec.getFieldType())
+            if(Field.isStringArray(columnSpec.getFieldType())){
+                builder.addStatement("object.$L($T.split(cursor.getString(cursor.getColumnIndex($L)), $S))",
+                        Field.setterName(columnSpec.getFieldName()),
+                        ArrayUtils.class,
+                        columnSpec.getColumnName().toUpperCase(),
+                        ", ");
+            }else if (Field.isLong(columnSpec.getFieldType())
                     || Field.isInt(columnSpec.getFieldType())
                     || Field.isShort(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L(($T) cursor.getLong(cursor.getColumnIndex($L)))",

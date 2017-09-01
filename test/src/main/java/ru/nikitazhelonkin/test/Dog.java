@@ -1,5 +1,7 @@
 package ru.nikitazhelonkin.test;
 
+import java.util.Arrays;
+
 import ru.nikitazhelonkin.sqlite.annotation.SQLiteColumn;
 import ru.nikitazhelonkin.sqlite.annotation.SQLiteObject;
 
@@ -20,6 +22,9 @@ public class Dog {
 
     @SQLiteColumn
     private int mAge;
+
+    @SQLiteColumn
+    private String[] mArray;
 
     @SQLiteColumn(references = "dog_owner_table(id) ON DELETE CASCADE")
     private long mDogOwnerId;
@@ -58,6 +63,14 @@ public class Dog {
         mAge = age;
     }
 
+    public void setArray(String[] array) {
+        mArray = array;
+    }
+
+    public String[] getArray() {
+        return mArray;
+    }
+
     public void setDogOwnerId(long dogOwnerId) {
         mDogOwnerId = dogOwnerId;
     }
@@ -74,4 +87,20 @@ public class Dog {
                 ", mAge=" + mAge +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+
+        Dog dog = (Dog) object;
+
+        if (mId != dog.mId) return false;
+        if (mAge != dog.mAge) return false;
+        if (mDogOwnerId != dog.mDogOwnerId) return false;
+        if (mName != null ? !mName.equals(dog.mName) : dog.mName != null) return false;
+        return Arrays.equals(mArray, dog.mArray);
+
+    }
+
 }

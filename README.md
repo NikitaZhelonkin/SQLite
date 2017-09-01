@@ -5,8 +5,8 @@ Database library for Android based on SQLite
 ### Gradle:
 
 ```groovy
-compile 'ru.nikitazhelonkin:sqlite:1.7'
-compile 'ru.nikitazhelonkin:sqlite-compiler:1.7'
+compile 'ru.nikitazhelonkin:sqlite:1.8'
+compile 'ru.nikitazhelonkin:sqlite-compiler:1.8'
 ```
 
 ### Usage:
