@@ -26,8 +26,6 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         void onChange(Table<T> table);
     }
 
-    private List<Table> mTables;
-
     private List<Pair<String, OnChangeListener>> mListeners;
 
     private Handler mMainHandler;
@@ -36,7 +34,6 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
 
     public SQLiteHelper(Context context, String name, int version) {
         super(context, name, new SQLiteCursorFactory(), version);
-        mTables = new ArrayList<>();
         mListeners = new CopyOnWriteArrayList<>();
         mMainHandler = new Handler(Looper.getMainLooper());
     }
@@ -45,20 +42,12 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         mLogEnabled = logEnabled;
     }
 
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-        createTables(new SQLiteDatabaseImpl(db));
+    protected void createTable(SQLiteDatabase db, Table t) {
+        t.create(new SQLiteDatabaseImpl(db));
     }
 
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        //do inheritance
-    }
-
-    protected void registerTable(Table t) {
-        if (!mTables.contains(t)) {
-            mTables.add(t);
-        }
+    protected void dropTable(SQLiteDatabase db, Table t) {
+        db.execSQL("DROP TABLE IF EXISTS " + t.getName());
     }
 
     public <T> void registerListener(Table<T> table, OnChangeListener<T> listener) {
@@ -143,9 +132,14 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         ContentValuesImpl valuesImpl = new ContentValuesImpl();
         table.bindValues(valuesImpl, object);
         ContentValues values = excludeColumnsFromCV(valuesImpl.getValues(), excludeUpdate);
-        int rowsAffected = updateInternal(table, selection, values);
+        int rowsAffected = update(table, selection, values);
         notifyTableChangedIfNeeded(table, rowsAffected > 0);
         return rowsAffected;
+    }
+
+    public <T> int update(@NonNull Table<T> table, @NonNull Selection selection, @NonNull ContentValues values) {
+        SQLiteDatabase db = getWritableDatabase();
+        return db.update(table.getName(), values, selection.selection(), selection.args());
     }
 
     public <T> int delete(@NonNull Table<T> table) {
@@ -157,12 +151,6 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         int rowsAffected = db.delete(table.getName(), selection.selection(), selection.args());
         notifyTableChangedIfNeeded(table, rowsAffected > 0);
         return rowsAffected;
-    }
-
-    public void deleteAll() {
-        for (Table t : mTables) {
-            delete(t);
-        }
     }
 
     @SuppressWarnings("unchecked")
@@ -215,16 +203,6 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         }
     }
 
-    private  <T> int updateInternal(@NonNull Table<T> table, @NonNull Selection selection, @NonNull ContentValues values) {
-        SQLiteDatabase db = getWritableDatabase();
-        return db.update(table.getName(), values, selection.selection(), selection.args());
-    }
-
-    private void createTables(SQLiteDatabaseImpl db) {
-        for (Table t : mTables) {
-            t.create(db);
-        }
-    }
 
     private <T> List<T> mapToList(@NonNull Table<T> table, Cursor cursor){
         List<T> list = new ArrayList<>();

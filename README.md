@@ -5,8 +5,8 @@ Database library for Android based on SQLite
 ### Gradle:
 
 ```groovy
-compile 'ru.nikitazhelonkin:sqlite:1.8'
-compile 'ru.nikitazhelonkin:sqlite-compiler:1.8'
+compile 'ru.nikitazhelonkin:sqlite:1.9'
+compile 'ru.nikitazhelonkin:sqlite-compiler:1.9'
 ```
 
 ### Usage:
@@ -80,8 +80,11 @@ public class MySQLiteHelper extends SQLiteHelper {
 
     public MySQLiteHelper(Context context) {
         super(context, DATABASE_NAME, VERSION);
-
-        registerTable(DogTable.INSTANCE);
+    }
+    
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        createTable(db, DogTable.INSTANCE);
     }
 }
 ```

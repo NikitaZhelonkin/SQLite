@@ -18,11 +18,20 @@ public class DatabaseHelper extends SQLiteHelper {
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, VERSION);
-
         setLogEnabled(true);
+    }
 
-        registerTable(DogOwnerTable.INSTANCE);
-        registerTable(DogTable.INSTANCE);
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        createTable(db, DogOwnerTable.INSTANCE);
+        createTable(db, DogTable.INSTANCE);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        dropTable(db, DogOwnerTable.INSTANCE);
+        dropTable(db, DogTable.INSTANCE);
+        onCreate(db);
     }
 
     @Override
