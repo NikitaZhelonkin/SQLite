@@ -1,0 +1,83 @@
+// ./gradlew clean build generateRelease
+apply plugin: 'maven'
+
+def groupId = PUBLISH_GROUP_ID
+def artifactId = PUBLISH_ARTIFACT_ID
+def version = PUBLISH_VERSION
+
+def localReleaseDest = "${buildDir}/release/${version}"
+
+if (project.getPlugins().hasPlugin('com.android.application') ||
+        project.getPlugins().hasPlugin('com.android.library')) {
+
+    task androidJavadocs(type: Javadoc) {
+        failOnError = false
+        source = android.sourceSets.main.java.srcDirs
+        ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+        classpath += files(ext.androidJar)
+    }
+
+    task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+        classifier = 'javadoc'
+        from androidJavadocs.destinationDir
+    }
+
+    task androidSourcesJar(type: Jar) {
+        classifier = 'sources'
+        from android.sourceSets.main.java.srcDirs
+    }
+
+} else {
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        pom.groupId = groupId
+        pom.artifactId = artifactId
+        pom.version = version
+
+        //Find another way of setting this config
+        pom.whenConfigured { pom ->
+            pom.dependencies.forEach { dep ->
+                if (dep.getVersion() == "unspecified") {
+                    dep.setGroupId(groupId)
+                    dep.setVersion(version)
+                }
+            }
+        }
+
+
+        // Add other pom properties here if you want (developer details / licenses)
+        repository(url: "file://${localReleaseDest}")
+    }
+}
+
+
+task zipRelease(type: Zip) {
+    from localReleaseDest
+    destinationDir buildDir
+    archiveName "${artifactId}-${version}.zip"
+}
+
+task generateRelease << {
+    println "Release ${version} can be found at ${localReleaseDest}/"
+    println "Release ${version} zipped can be found ${buildDir}/${artifactId}-${version}.zip"
+}
+
+generateRelease.dependsOn(uploadArchives)
+generateRelease.dependsOn(zipRelease)
+
+
+artifacts {
+    if (project.getPlugins().hasPlugin('com.android.application') ||
+            project.getPlugins().hasPlugin('com.android.library')) {
+        archives androidSourcesJar
+        archives androidJavadocsJar
+    }else{
+        archives sourcesJar
+    }
+}
