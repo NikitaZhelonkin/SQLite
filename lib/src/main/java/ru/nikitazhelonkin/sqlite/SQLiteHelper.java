@@ -20,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class SQLiteHelper extends SQLiteOpenHelper {
 
-    private static final String TAG  = SQLiteHelper.class.getSimpleName();
+    private static final String TAG = SQLiteHelper.class.getSimpleName();
 
     public interface OnChangeListener<T> {
         void onChange(Table<T> table);
@@ -97,6 +97,25 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         return list.size() > 0 ? list.get(0) : null;
     }
 
+    public int queryCount(@NonNull Table table, @Nullable Selection selection) {
+        Cursor cursor = getReadableDatabase().query(table.getName(), new String[]{"COUNT(*)"},
+                selection == null ? null : selection.selection(),
+                selection == null ? null : selection.args(),
+                null, null, null);
+        if (cursor == null) {
+            return 0;
+        }
+        try {
+            int count = 0;
+            if (cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+            }
+            return count;
+        } finally {
+            cursor.close();
+        }
+    }
+
     public <T> long insertOrReplace(@NonNull Table<T> table, @NonNull T object) {
         return insert(table, object, SQLiteDatabase.CONFLICT_REPLACE);
     }
@@ -168,7 +187,7 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
     }
 
     public <T> void notifyTableChangedIfNeeded(final Table<T> table, boolean notify) {
-        if(notify){
+        if (notify) {
             notifyTableChanged(table);
         }
     }
@@ -204,7 +223,7 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
     }
 
 
-    private <T> List<T> mapToList(@NonNull Table<T> table, Cursor cursor){
+    private <T> List<T> mapToList(@NonNull Table<T> table, Cursor cursor) {
         List<T> list = new ArrayList<>();
 
         if (cursor == null) {
