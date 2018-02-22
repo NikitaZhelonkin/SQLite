@@ -1,11 +1,14 @@
 package ru.nikitazhelonkin.sqlite.compiler;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 
+import ru.nikitazhelonkin.sqlite.annotation.Index;
 import ru.nikitazhelonkin.sqlite.annotation.SQLiteObject;
 
 /**
@@ -25,6 +28,12 @@ class SQLiteObjectVisitor extends Visitor {
         TableSpec spec = TableSpec.getOrCreate(specs, e);
         spec.setTableName(sqLiteObject.value());
         spec.setOriginElement(e);
+        Index[] indices = sqLiteObject.indices();
+        List<IndexSpec> indexSpecList = new ArrayList<>(indices.length);
+        for (Index index : indices) {
+            indexSpecList.add(new IndexSpec(index.name(), index.value(), index.unique()));
+        }
+        spec.setIndices(indexSpecList);
         return super.visitType(e, specs);
     }
 }

@@ -2,6 +2,7 @@ package ru.nikitazhelonkin.test;
 
 import java.util.Arrays;
 
+import ru.nikitazhelonkin.sqlite.annotation.Index;
 import ru.nikitazhelonkin.sqlite.annotation.SQLiteColumn;
 import ru.nikitazhelonkin.sqlite.annotation.SQLiteObject;
 
@@ -10,8 +11,8 @@ import ru.nikitazhelonkin.sqlite.annotation.SQLiteObject;
  */
 
 
-
-@SQLiteObject("dog_table")
+@SQLiteObject(value = "dog_table",
+        indices = @Index(name = "dog_table_unique_index", value = {"name", "age"}, unique = true))
 public class Dog {
 
     @SQLiteColumn(primaryKey = true, autoincrement = true)

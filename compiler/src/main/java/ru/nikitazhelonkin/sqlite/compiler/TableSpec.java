@@ -20,6 +20,8 @@ class TableSpec {
 
     private String mTableName;
 
+    private List<IndexSpec> mIndices = new ArrayList<>();
+
     List<ColumnSpec> getColumns() {
         return mColumns;
     }
@@ -51,6 +53,14 @@ class TableSpec {
 
     void setTableName(String tableName) {
         mTableName = tableName;
+    }
+
+    void setIndices(List<IndexSpec> indices) {
+        mIndices = indices;
+    }
+
+    List<IndexSpec> getIndices() {
+        return mIndices;
     }
 
     ClassName getClassName() {

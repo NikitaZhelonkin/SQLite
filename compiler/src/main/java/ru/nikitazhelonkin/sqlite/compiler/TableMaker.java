@@ -9,6 +9,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import java.util.Iterator;
+import java.util.List;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -92,6 +93,11 @@ class TableMaker {
             .references(columnSpec.getReferences()));
         }
         builder.addStatement("db.execSQL($S)", tableBuilder.toSql());
+        List<IndexSpec> indexSpecList = mTableSpec.getIndices();
+
+        for(IndexSpec indexSpec:indexSpecList){
+            builder.addStatement("db.execSQL($S)", indexSpec.toSql(mTableSpec.getTableName()));
+        }
         return builder.build();
     }
 
