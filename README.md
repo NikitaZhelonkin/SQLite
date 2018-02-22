@@ -5,8 +5,8 @@ Database library for Android based on SQLite
 ### Gradle:
 
 ```groovy
-implementation 'ru.nikitazhelonkin:sqlite:2.0.2'
-annotationProcessor 'ru.nikitazhelonkin:sqlite-compiler:2.0.2'
+implementation 'ru.nikitazhelonkin:sqlite:2.0.3'
+annotationProcessor 'ru.nikitazhelonkin:sqlite-compiler:2.0.3'
 ```
 
 ### Usage:
@@ -116,4 +116,19 @@ helper.delete(DogTable.INSTANCE, Selection.create().equals(DogTable.ID, dog.getI
 
 ```java
 helper.update(DogTable.INSTANCE, Selection.create().equals(DogTable.ID, dog.getId()), dog);
+```
+
+### Declare Indices
+
+```java
+@SQLiteObject("dog_table",  indices = @Index(name = "dog_table_unique_idx", value = {"name", "age"}, unique = true))
+public class Dog {
+
+    @SQLiteColumn
+    private String mName;
+
+    @SQLiteColumn
+    private int mAge;
+    //....
+}
 ```
