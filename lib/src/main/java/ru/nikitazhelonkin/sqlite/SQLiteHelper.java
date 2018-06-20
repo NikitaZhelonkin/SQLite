@@ -79,7 +79,11 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
 
     @NonNull
     public <T> List<T> query(@NonNull Table<T> table, Selection selection) {
-        SQLiteDatabase db = getReadableDatabase();
+        return query(getReadableDatabase(), table, selection);
+    }
+
+    @NonNull
+    public <T> List<T> query(SQLiteDatabase db, @NonNull Table<T> table, Selection selection) {
         Cursor cursor = db.query(table.getName(), selection.columns(), selection.selection(), selection.args(),
                 selection.groupBy(), selection.having(), selection.orderBy(), selection.limit());
         return mapToList(table, cursor);
@@ -133,13 +137,13 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
     }
 
     public <T> long insert(@NonNull Table<T> table, @NonNull T object, int conflictAlgorithm) {
-        long id = insertInternal(table, object, conflictAlgorithm);
+        long id = insert(getWritableDatabase(), table, object, conflictAlgorithm);
         notifyTableChangedIfNeeded(table, id != -1);
         return id;
     }
 
     public <T> void insert(@NonNull Table<T> table, @NonNull Iterable<T> objects, int conflictAlgorithm) {
-        insertInternal(table, objects, conflictAlgorithm);
+        insert(getWritableDatabase(), table, objects, conflictAlgorithm);
         notifyTableChanged(table);
     }
 
@@ -157,7 +161,10 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
     }
 
     public <T> int update(@NonNull Table<T> table, @NonNull Selection selection, @NonNull ContentValues values) {
-        SQLiteDatabase db = getWritableDatabase();
+        return update(getWritableDatabase(), table, selection, values);
+    }
+
+    public <T> int update(SQLiteDatabase db, @NonNull Table<T> table, @NonNull Selection selection, @NonNull ContentValues values) {
         return db.update(table.getName(), values, selection.selection(), selection.args());
     }
 
@@ -166,7 +173,10 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
     }
 
     public <T> int delete(@NonNull Table<T> table, @NonNull Selection selection) {
-        SQLiteDatabase db = getWritableDatabase();
+        return delete(getWritableDatabase(), table, selection);
+    }
+
+    public <T> int delete(SQLiteDatabase db, @NonNull Table<T> table, @NonNull Selection selection) {
         int rowsAffected = db.delete(table.getName(), selection.selection(), selection.args());
         notifyTableChangedIfNeeded(table, rowsAffected > 0);
         return rowsAffected;
@@ -192,12 +202,11 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         }
     }
 
-    private <T> void insertInternal(@NonNull Table<T> table, @NonNull Iterable<T> objects, int conflictAlgorithm) {
-        SQLiteDatabase db = getWritableDatabase();
+    public  <T> void insert(SQLiteDatabase db, @NonNull Table<T> table, @NonNull Iterable<T> objects, int conflictAlgorithm) {
         try {
             db.beginTransaction();
             for (T obj : objects) {
-                insertInternal(table, obj, conflictAlgorithm);
+                insert(db, table, obj, conflictAlgorithm);
             }
             db.setTransactionSuccessful();
         } finally {
@@ -205,8 +214,7 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         }
     }
 
-    private <T> long insertInternal(@NonNull Table<T> table, @NonNull T object, int conflictAlgorithm) {
-        SQLiteDatabase db = getWritableDatabase();
+    public  <T> long insert(SQLiteDatabase db, @NonNull Table<T> table, @NonNull T object, int conflictAlgorithm) {
         try {
             ContentValuesImpl values = new ContentValuesImpl();
             table.bindValues(values, object);
