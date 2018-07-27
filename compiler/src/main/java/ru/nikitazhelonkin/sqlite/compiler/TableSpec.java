@@ -8,6 +8,8 @@ import java.util.Map;
 
 import javax.lang.model.element.TypeElement;
 
+import ru.nikitazhelonkin.sqlite.annotation.SQLiteObject;
+
 /**
  * Created by nikita on 03.02.17.
  */
@@ -21,6 +23,8 @@ class TableSpec {
     private String mTableName;
 
     private List<IndexSpec> mIndices = new ArrayList<>();
+
+    private SQLiteObject.Deserialization mDeserialization = SQLiteObject.Deserialization.METHOD;
 
     List<ColumnSpec> getColumns() {
         return mColumns;
@@ -53,6 +57,14 @@ class TableSpec {
 
     void setTableName(String tableName) {
         mTableName = tableName;
+    }
+
+    public void setDeserialization(SQLiteObject.Deserialization deserialization) {
+        mDeserialization = deserialization;
+    }
+
+    public SQLiteObject.Deserialization getDeserialization() {
+        return mDeserialization;
     }
 
     void setIndices(List<IndexSpec> indices) {

@@ -16,4 +16,11 @@ public @interface SQLiteObject {
     String value();
 
     Index[] indices() default {};
+
+    Deserialization deserialization() default Deserialization.METHOD;
+
+    enum Deserialization {
+        METHOD,
+        CONSTRUCTOR
+    }
 }

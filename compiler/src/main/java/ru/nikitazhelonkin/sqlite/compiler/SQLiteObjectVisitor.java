@@ -28,6 +28,7 @@ class SQLiteObjectVisitor extends Visitor {
         TableSpec spec = TableSpec.getOrCreate(specs, e);
         spec.setTableName(sqLiteObject.value());
         spec.setOriginElement(e);
+        spec.setDeserialization(sqLiteObject.deserialization());
         Index[] indices = sqLiteObject.indices();
         List<IndexSpec> indexSpecList = new ArrayList<>(indices.length);
         for (Index index : indices) {

@@ -12,6 +12,7 @@ import ru.nikitazhelonkin.sqlite.annotation.SQLiteObject;
 
 
 @SQLiteObject(value = "dog_table",
+        deserialization = SQLiteObject.Deserialization.CONSTRUCTOR,
         indices = @Index(name = "dog_table_unique_index", value = {"name", "age"}, unique = true))
 public class Dog {
 
@@ -30,8 +31,16 @@ public class Dog {
     @SQLiteColumn(references = "dog_owner_table(id) ON DELETE CASCADE")
     private long mDogOwnerId;
 
-    public Dog() {
+    public Dog(){
 
+    }
+
+    public Dog(long id, String name, int age, String[] array, long dogOwnerId) {
+        mId = id;
+        mName = name;
+        mAge = age;
+        mArray = array;
+        mDogOwnerId = dogOwnerId;
     }
 
     public Dog(String name, int age, long dogOwnerId) {

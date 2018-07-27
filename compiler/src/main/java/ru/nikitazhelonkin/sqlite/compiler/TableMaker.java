@@ -8,7 +8,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.lang.model.element.Modifier;
@@ -90,12 +90,12 @@ class TableMaker {
                     columnSpec.isAutoincrement(),
                     columnSpec.isUnique(),
                     columnSpec.isNotNull())
-            .references(columnSpec.getReferences()));
+                    .references(columnSpec.getReferences()));
         }
         builder.addStatement("db.execSQL($S)", tableBuilder.toSql());
         List<IndexSpec> indexSpecList = mTableSpec.getIndices();
 
-        for(IndexSpec indexSpec:indexSpecList){
+        for (IndexSpec indexSpec : indexSpecList) {
             builder.addStatement("db.execSQL($S)", indexSpec.toSql(mTableSpec.getTableName()));
         }
         return builder.build();
@@ -108,8 +108,8 @@ class TableMaker {
                 .addParameter(ClassName.get(mTableSpec.getOriginElement()), "object")
                 .addModifiers(Modifier.PUBLIC);
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
-            if(columnSpec.isAutoincrement()){
-               continue;
+            if (columnSpec.isAutoincrement()) {
+                continue;
             }
             if (Field.isStringArray(columnSpec.getFieldType())) {
                 builder.addStatement("values.put($L, $T.join(object.$L(), $S))", columnSpec.getColumnName().toUpperCase(),
@@ -133,15 +133,28 @@ class TableMaker {
                 .addModifiers(Modifier.PUBLIC)
                 .returns(originClass)
                 .addParameter(ISQLiteCursor.class, "cursor");
+
+        switch (mTableSpec.getDeserialization()) {
+            case METHOD:
+                createWithMethods(builder, originClass);
+                break;
+            case CONSTRUCTOR:
+                createWithConstructor(builder, originClass);
+                break;
+        }
+        return builder.build();
+    }
+
+    private void createWithMethods(MethodSpec.Builder builder, final ClassName originClass) {
         builder.addStatement("final $1T object = new $1T()", originClass);
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
-            if(Field.isStringArray(columnSpec.getFieldType())){
+            if (Field.isStringArray(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L($T.split(cursor.getString(cursor.getColumnIndex($L)), $S))",
                         Field.setterName(columnSpec.getFieldName()),
                         ArrayUtils.class,
                         columnSpec.getColumnName().toUpperCase(),
                         ", ");
-            }else if (Field.isLong(columnSpec.getFieldType())
+            } else if (Field.isLong(columnSpec.getFieldType())
                     || Field.isInt(columnSpec.getFieldType())
                     || Field.isShort(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L(($T) cursor.getLong(cursor.getColumnIndex($L)))",
@@ -163,7 +176,45 @@ class TableMaker {
             }
         }
         builder.addStatement("return object");
-        return builder.build();
+    }
+
+    private void createWithConstructor(MethodSpec.Builder builder, final ClassName originClass) {
+        List<Object> objects = new ArrayList<>();
+        StringBuilder stringBuilder = new StringBuilder("return new $T(");
+        objects.add(originClass);
+        for (int i = 0; i < mTableSpec.getColumns().size(); i++) {
+            stringBuilder.append("\n");
+            final ColumnSpec columnSpec = mTableSpec.getColumns().get(i);
+            if (Field.isStringArray(columnSpec.getFieldType())) {
+                stringBuilder.append("$T.split(cursor.getString(cursor.getColumnIndex($L)), $S)");
+                objects.add(ArrayUtils.class);
+                objects.add(columnSpec.getColumnName().toUpperCase());
+                objects.add(", ");
+            } else if (Field.isLong(columnSpec.getFieldType())
+                    || Field.isInt(columnSpec.getFieldType())
+                    || Field.isShort(columnSpec.getFieldType())) {
+                stringBuilder.append("($T) cursor.getLong(cursor.getColumnIndex($L))");
+                objects.add(columnSpec.getFieldType());
+                objects.add(columnSpec.getColumnName().toUpperCase());
+            } else if (Field.isBoolean(columnSpec.getFieldType())) {
+                stringBuilder.append("cursor.getLong(cursor.getColumnIndex($L)) == 1");
+                objects.add(columnSpec.getColumnName().toUpperCase());
+            } else if (Field.isDouble(columnSpec.getFieldType())
+                    || Field.isFloat(columnSpec.getFieldType())) {
+                stringBuilder.append("($T) cursor.getDouble(cursor.getColumnIndex($L))");
+                objects.add(columnSpec.getFieldType());
+                objects.add(columnSpec.getColumnName().toUpperCase());
+            } else if (Field.isByteArray(columnSpec.getFieldType())) {
+                stringBuilder.append("cursor.getBlob(cursor.getColumnIndex($L))");
+                objects.add(columnSpec.getColumnName().toUpperCase());
+            } else if (Field.isString(columnSpec.getFieldType())) {
+                stringBuilder.append("cursor.getString(cursor.getColumnIndex($L))");
+                objects.add(columnSpec.getColumnName().toUpperCase());
+            }
+            if (i != mTableSpec.getColumns().size() - 1) stringBuilder.append(",");
+        }
+        stringBuilder.append(")");
+        builder.addStatement(stringBuilder.toString(), (Object[]) objects.toArray());
     }
 
     private void addColumnsFields(TypeSpec.Builder builder) {
