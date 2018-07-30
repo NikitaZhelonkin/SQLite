@@ -114,12 +114,12 @@ class TableMaker {
             if (Field.isStringArray(columnSpec.getFieldType())) {
                 builder.addStatement("values.put($L, $T.join(object.$L(), $S))", columnSpec.getColumnName().toUpperCase(),
                         ArrayUtils.class,
-                        Field.getterName(columnSpec.getFieldName()),
+                        Field.getterName(columnSpec.getFieldName(), columnSpec.getFieldType()),
                         ", ");
             } else {
                 builder.addStatement("values.put($L, object.$L())",
                         columnSpec.getColumnName().toUpperCase(),
-                        Field.getterName(columnSpec.getFieldName()));
+                        Field.getterName(columnSpec.getFieldName(), columnSpec.getFieldType()));
             }
 
         }
@@ -150,7 +150,7 @@ class TableMaker {
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
             if (Field.isStringArray(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L($T.split(cursor.getString(cursor.getColumnIndex($L)), $S))",
-                        Field.setterName(columnSpec.getFieldName()),
+                        Field.setterName(columnSpec.getFieldName(), columnSpec.getFieldType()),
                         ArrayUtils.class,
                         columnSpec.getColumnName().toUpperCase(),
                         ", ");
@@ -158,21 +158,21 @@ class TableMaker {
                     || Field.isInt(columnSpec.getFieldType())
                     || Field.isShort(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L(($T) cursor.getLong(cursor.getColumnIndex($L)))",
-                        Field.setterName(columnSpec.getFieldName()), columnSpec.getFieldType(), columnSpec.getColumnName().toUpperCase());
+                        Field.setterName(columnSpec.getFieldName(), columnSpec.getFieldType()), columnSpec.getFieldType(), columnSpec.getColumnName().toUpperCase());
             } else if (Field.isBoolean(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L(cursor.getLong(cursor.getColumnIndex($L)) == 1)",
-                        Field.setterName(columnSpec.getFieldName()), columnSpec.getColumnName().toUpperCase());
+                        Field.setterName(columnSpec.getFieldName(), columnSpec.getFieldType()), columnSpec.getColumnName().toUpperCase());
             } else if (Field.isDouble(columnSpec.getFieldType())
                     || Field.isFloat(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L(($T) cursor.getDouble(cursor.getColumnIndex($L)))",
-                        Field.setterName(columnSpec.getFieldName()),
+                        Field.setterName(columnSpec.getFieldName(),columnSpec.getFieldType()),
                         columnSpec.getFieldType(), columnSpec.getColumnName().toUpperCase());
             } else if (Field.isByteArray(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L(cursor.getBlob(cursor.getColumnIndex($L)))",
-                        Field.setterName(columnSpec.getFieldName()), columnSpec.getColumnName().toUpperCase());
+                        Field.setterName(columnSpec.getFieldName(),columnSpec.getFieldType()), columnSpec.getColumnName().toUpperCase());
             } else if (Field.isString(columnSpec.getFieldType())) {
                 builder.addStatement("object.$L(cursor.getString(cursor.getColumnIndex($L)))",
-                        Field.setterName(columnSpec.getFieldName()), columnSpec.getColumnName().toUpperCase());
+                        Field.setterName(columnSpec.getFieldName(),columnSpec.getFieldType()), columnSpec.getColumnName().toUpperCase());
             }
         }
         builder.addStatement("return object");

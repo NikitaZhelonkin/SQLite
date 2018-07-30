@@ -1,7 +1,6 @@
 package ru.nikitazhelonkin.sqlite.compiler;
 
 
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -112,12 +111,20 @@ class Field {
         return underscore(removePrefix(fieldName));
     }
 
-    public static String setterName(String fieldName) {
-        return "set" + capitalize(removePrefix(fieldName));
+    public static String setterName(String fieldName, TypeMirror fieldType) {
+        if (isBoolean(fieldType)) {
+            return "set" + capitalize(removePrefix(fieldName).replaceFirst("[Ii]s", ""));
+        } else {
+            return "set" + capitalize(removePrefix(fieldName));
+        }
     }
 
-    public static String getterName(String fieldName) {
-        return "get" + capitalize(removePrefix(fieldName));
+    public static String getterName(String fieldName, TypeMirror fieldType) {
+        if (isBoolean(fieldType)) {
+            return "is" + capitalize(removePrefix(fieldName).replaceFirst("[Ii]s", ""));
+        } else {
+            return "get" + capitalize(removePrefix(fieldName));
+        }
     }
 
     private static String removePrefix(String fieldName) {

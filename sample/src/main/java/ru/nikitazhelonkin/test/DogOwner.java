@@ -16,6 +16,9 @@ public class DogOwner {
     @SQLiteColumn
     private int mAnotherColumn;
 
+    @SQLiteColumn
+    private boolean mIsPremium;
+
     public void setId(long id) {
         mId = id;
     }
@@ -30,5 +33,13 @@ public class DogOwner {
 
     public int getAnotherColumn() {
         return mAnotherColumn;
+    }
+
+    public void setPremium(boolean premium) {
+        mIsPremium = premium;
+    }
+
+    public boolean isPremium() {
+        return mIsPremium;
     }
 }
