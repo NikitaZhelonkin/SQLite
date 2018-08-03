@@ -18,11 +18,7 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper implements SQLiteDat
         db.execSQL("DROP TABLE IF EXISTS " + t.getName());
     }
 
-    public void executeTransaction(Runnable transaction) {
-        executeTransaction(getWritableDatabase(), transaction);
-    }
-
-    public void executeTransaction(SQLiteDatabase db, Runnable transaction) {
+    public void inTransaction(SQLiteDatabase db, Runnable transaction) {
         try {
             db.beginTransaction();
             transaction.run();
