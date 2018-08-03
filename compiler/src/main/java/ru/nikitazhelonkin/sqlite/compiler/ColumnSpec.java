@@ -3,6 +3,8 @@ package ru.nikitazhelonkin.sqlite.compiler;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
+import ru.nikitazhelonkin.sqlite.annotation.Reference;
+
 /**
  * Created by nikita on 03.02.17.
  */
@@ -25,9 +27,11 @@ class ColumnSpec {
 
     private final boolean mNotNull;
 
-    private final String mReferences;
+    private final Reference mReference;
 
-    ColumnSpec(Element field, String columnName, String columnType, boolean primaryKey, boolean autoincrement, boolean unique, boolean notNull, String references) {
+    private final TypeMirror mConverterClazz;
+
+    ColumnSpec(Element field, String columnName, String columnType, boolean primaryKey, boolean autoincrement, boolean unique, boolean notNull, Reference reference, TypeMirror converterClazz) {
         mFieldName = field.getSimpleName().toString();
         mFieldType = field.asType();
         mColumnName = columnName;
@@ -36,7 +40,8 @@ class ColumnSpec {
         mIsAutoincrement = autoincrement;
         mUnique = unique;
         mNotNull = notNull;
-        mReferences = references;
+        mReference = reference;
+        mConverterClazz = converterClazz;
     }
 
     public String getFieldName() {
@@ -71,7 +76,11 @@ class ColumnSpec {
         return mNotNull;
     }
 
-    public String getReferences(){
-        return mReferences;
+    public Reference getReference(){
+        return mReference;
+    }
+
+    public TypeMirror getConverterClazz() {
+        return mConverterClazz;
     }
 }

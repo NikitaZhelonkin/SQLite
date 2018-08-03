@@ -8,6 +8,8 @@ public interface ISQLiteCursor {
 
     long getLong(int index);
 
+    int getInt(int index);
+
     double getDouble(int index);
 
     String getString(int index);

@@ -5,9 +5,12 @@ import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
 
+import ru.nikitazhelonkin.sqlite.annotation.Reference;
 import ru.nikitazhelonkin.sqlite.annotation.SQLiteColumn;
+import ru.nikitazhelonkin.sqlite.annotation.TypeConverters;
 
 /**
  * Created by nikita on 03.02.17.
@@ -23,6 +26,15 @@ class SQLiteColumnVisitor extends Visitor {
     public Void visitVariable(VariableElement e, Map<TypeElement, TableSpec> specs) {
         fixFieldAccess(e);
         SQLiteColumn annotation = e.getAnnotation(SQLiteColumn.class);
+        TypeConverters typeConvertersAnnotation = e.getAnnotation(TypeConverters.class);
+        TypeMirror converterClazz = null;
+        if (typeConvertersAnnotation != null) {
+            try {
+                typeConvertersAnnotation.value();
+            } catch (MirroredTypeException mte) {
+                converterClazz = mte.getTypeMirror();
+            }
+        }
 
         TableSpec spec = TableSpec.getOrCreate(specs, (TypeElement) e.getEnclosingElement());
 
@@ -45,12 +57,15 @@ class SQLiteColumnVisitor extends Visitor {
             columnType = SQLiteColumn.TEXT;
         }
 
+        Reference reference = annotation.reference().length > 0 ? annotation.reference()[0] : null;
+
         spec.addColumn(new ColumnSpec(e, columnName, columnType,
                 annotation.primaryKey(),
                 annotation.autoincrement(),
                 annotation.unique(),
                 annotation.notnull(),
-                annotation.references()
+                reference,
+                converterClazz
         ));
         return super.visitVariable(e, specs);
     }

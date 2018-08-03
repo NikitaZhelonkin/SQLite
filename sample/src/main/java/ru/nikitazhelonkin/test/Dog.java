@@ -3,8 +3,10 @@ package ru.nikitazhelonkin.test;
 import java.util.Arrays;
 
 import ru.nikitazhelonkin.sqlite.annotation.Index;
+import ru.nikitazhelonkin.sqlite.annotation.Reference;
 import ru.nikitazhelonkin.sqlite.annotation.SQLiteColumn;
 import ru.nikitazhelonkin.sqlite.annotation.SQLiteObject;
+import ru.nikitazhelonkin.sqlite.annotation.TypeConverters;
 
 /**
  * Created by nikita on 29.03.17.
@@ -25,10 +27,11 @@ public class Dog {
     @SQLiteColumn
     private int mAge;
 
+    @TypeConverters(StringArrayConverter.class)
     @SQLiteColumn
     private String[] mArray;
 
-    @SQLiteColumn(references = "dog_owner_table(id) ON DELETE CASCADE")
+    @SQLiteColumn(reference = @Reference(parentTable = "dog_owner_table", parentColumn = "id", onDelete = Reference.CASCADE))
     private long mDogOwnerId;
 
     public Dog(){

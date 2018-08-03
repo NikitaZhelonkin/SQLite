@@ -1,45 +1,13 @@
 package ru.nikitazhelonkin.sqlite;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Handler;
-import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.util.Log;
-import android.util.Pair;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-public abstract class SQLiteHelper extends SQLiteOpenHelper {
-
-    private static final String TAG = SQLiteHelper.class.getSimpleName();
-
-    public interface OnChangeListener<T> {
-        void onChange(Table<T> table);
-    }
-
-    private List<Pair<String, OnChangeListener>> mListeners;
-
-    private Handler mMainHandler;
-
-    private boolean mLogEnabled = false;
+public abstract class SQLiteHelper extends SQLiteOpenHelper implements SQLiteDatabaseProvider{
 
     public SQLiteHelper(Context context, String name, int version) {
         super(context, name, new SQLiteCursorFactory(), version);
-        mListeners = new CopyOnWriteArrayList<>();
-        mMainHandler = new Handler(Looper.getMainLooper());
-    }
-
-    public void setLogEnabled(boolean logEnabled) {
-        mLogEnabled = logEnabled;
     }
 
     protected void createTable(SQLiteDatabase db, Table t) {
@@ -50,230 +18,17 @@ public abstract class SQLiteHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + t.getName());
     }
 
-    public <T> void registerListener(Table<T> table, OnChangeListener<T> listener) {
-        mListeners.add(new Pair<String, OnChangeListener>(table.getName(), listener));
+    public void executeTransaction(Runnable transaction) {
+        executeTransaction(getWritableDatabase(), transaction);
     }
 
-    public <T> void unregisterListener(Table<T> table, OnChangeListener<T> listener) {
-        int index = -1;
-        for (int i = 0; i < mListeners.size(); i++) {
-            if (mListeners.get(i).second == listener) {
-                index = i;
-            }
-        }
-        if (index != -1) {
-            mListeners.remove(index);
-        }
-    }
-
-    public <T> List<T> rawQuery(@NonNull Table<T> table, String sql, String[] selectionArgs) {
-        SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.rawQuery(sql, selectionArgs);
-        return mapToList(table, cursor);
-    }
-
-    @NonNull
-    public <T> List<T> query(@NonNull Table<T> table) {
-        return query(table, Selection.create());
-    }
-
-    @NonNull
-    public <T> List<T> query(@NonNull Table<T> table, Selection selection) {
-        return query(getReadableDatabase(), table, selection);
-    }
-
-    @NonNull
-    public <T> List<T> query(SQLiteDatabase db, @NonNull Table<T> table, Selection selection) {
-        Cursor cursor = db.query(table.getName(), selection.columns(), selection.selection(), selection.args(),
-                selection.groupBy(), selection.having(), selection.orderBy(), selection.limit());
-        return mapToList(table, cursor);
-    }
-
-    @Nullable
-    public <T> T queryFirst(@NonNull Table<T> table) {
-        List<T> list = query(table, Selection.create());
-        return list.size() > 0 ? list.get(0) : null;
-    }
-
-    @Nullable
-    public <T> T queryFirst(@NonNull Table<T> table, Selection selection) {
-        List<T> list = query(table, selection);
-        return list.size() > 0 ? list.get(0) : null;
-    }
-
-    public int queryCount(@NonNull Table table, @Nullable Selection selection) {
-        Cursor cursor = getReadableDatabase().query(table.getName(), new String[]{"COUNT(*)"},
-                selection == null ? null : selection.selection(),
-                selection == null ? null : selection.args(),
-                null, null, null);
-        if (cursor == null) {
-            return 0;
-        }
-        try {
-            int count = 0;
-            if (cursor.moveToFirst()) {
-                count = cursor.getInt(0);
-            }
-            return count;
-        } finally {
-            cursor.close();
-        }
-    }
-
-    public <T> long insertOrReplace(@NonNull Table<T> table, @NonNull T object) {
-        return insert(table, object, SQLiteDatabase.CONFLICT_REPLACE);
-    }
-
-    public <T> void insertOrReplace(@NonNull Table<T> table, @NonNull Iterable<T> objects) {
-        insert(table, objects, SQLiteDatabase.CONFLICT_REPLACE);
-    }
-
-    public <T> long insert(@NonNull Table<T> table, @NonNull T object) {
-        return insert(table, object, SQLiteDatabase.CONFLICT_NONE);
-    }
-
-    public <T> void insert(@NonNull Table<T> table, @NonNull Iterable<T> objects) {
-        insert(table, objects, SQLiteDatabase.CONFLICT_NONE);
-    }
-
-    public <T> long insert(@NonNull Table<T> table, @NonNull T object, int conflictAlgorithm) {
-        long id = insert(getWritableDatabase(), table, object, conflictAlgorithm);
-        notifyTableChangedIfNeeded(table, id != -1);
-        return id;
-    }
-
-    public <T> void insert(@NonNull Table<T> table, @NonNull Iterable<T> objects, int conflictAlgorithm) {
-        insert(getWritableDatabase(), table, objects, conflictAlgorithm);
-        notifyTableChanged(table);
-    }
-
-    public <T> int update(@NonNull Table<T> table, @NonNull Selection selection, @NonNull T object) {
-        return update(table, selection, object, null);
-    }
-
-    public <T> int update(@NonNull Table<T> table, @NonNull Selection selection, @NonNull T object, String[] excludeUpdate) {
-        ContentValuesImpl valuesImpl = new ContentValuesImpl();
-        table.bindValues(valuesImpl, object);
-        ContentValues values = excludeColumnsFromCV(valuesImpl.getValues(), excludeUpdate);
-        int rowsAffected = update(table, selection, values);
-        notifyTableChangedIfNeeded(table, rowsAffected > 0);
-        return rowsAffected;
-    }
-
-    public <T> int update(@NonNull Table<T> table, @NonNull Selection selection, @NonNull ContentValues values) {
-        return update(getWritableDatabase(), table, selection, values);
-    }
-
-    public <T> int update(SQLiteDatabase db, @NonNull Table<T> table, @NonNull Selection selection, @NonNull ContentValues values) {
-        return db.update(table.getName(), values, selection.selection(), selection.args());
-    }
-
-    public <T> int delete(@NonNull Table<T> table) {
-        return delete(table, Selection.create());
-    }
-
-    public <T> int delete(@NonNull Table<T> table, @NonNull Selection selection) {
-        return delete(getWritableDatabase(), table, selection);
-    }
-
-    public <T> int delete(SQLiteDatabase db, @NonNull Table<T> table, @NonNull Selection selection) {
-        int rowsAffected = db.delete(table.getName(), selection.selection(), selection.args());
-        notifyTableChangedIfNeeded(table, rowsAffected > 0);
-        return rowsAffected;
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> void notifyTableChanged(final Table<T> table) {
-        for (final Pair<String, OnChangeListener> pair : mListeners) {
-            if (pair.first.equals(table.getName())) {
-                mMainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        pair.second.onChange(table);
-                    }
-                });
-            }
-        }
-    }
-
-    public <T> void notifyTableChangedIfNeeded(final Table<T> table, boolean notify) {
-        if (notify) {
-            notifyTableChanged(table);
-        }
-    }
-
-    public  <T> void insert(SQLiteDatabase db, @NonNull Table<T> table, @NonNull Iterable<T> objects, int conflictAlgorithm) {
+    public void executeTransaction(SQLiteDatabase db, Runnable transaction) {
         try {
             db.beginTransaction();
-            for (T obj : objects) {
-                insert(db, table, obj, conflictAlgorithm);
-            }
+            transaction.run();
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
-        }
-    }
-
-    public  <T> long insert(SQLiteDatabase db, @NonNull Table<T> table, @NonNull T object, int conflictAlgorithm) {
-        try {
-            ContentValuesImpl values = new ContentValuesImpl();
-            table.bindValues(values, object);
-            long id = db.insertWithOnConflict(table.getName(), null, values.getValues(),
-                    conflictAlgorithm);
-            if (id == -1) {
-                return id;
-            }
-            return id;
-        } catch (SQLiteException e) {
-            log(e.getMessage());
-            return -1;
-        }
-    }
-
-
-    private <T> List<T> mapToList(@NonNull Table<T> table, Cursor cursor) {
-        List<T> list = new ArrayList<>();
-
-        if (cursor == null) {
-            return list;
-        }
-        try {
-            list = new ArrayList<>(cursor.getCount());
-            while (cursor.moveToNext()) {
-                list.add(table.fromCursor((ISQLiteCursor) cursor));
-            }
-            return list;
-        } finally {
-            cursor.close();
-        }
-    }
-
-    private ContentValues excludeColumnsFromCV(ContentValues cv, String[] excludeColumns) {
-        if (excludeColumns == null) {
-            return cv;
-        }
-        Iterator<String> iterator = cv.keySet().iterator();
-        for (; iterator.hasNext(); ) {
-            String key = iterator.next();
-            if (contains(excludeColumns, key)) {
-                iterator.remove();
-            }
-        }
-        return cv;
-    }
-
-    private boolean contains(@NonNull String[] array, @NonNull String string) {
-        for (String s : array) {
-            if (s.equals(string)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void log(String message) {
-        if (mLogEnabled) {
-            Log.e(TAG, message);
         }
     }
 

@@ -72,7 +72,7 @@ public class Column {
     }
 
     public Column references(String reference){
-        mReferences =reference;
+        mReferences = reference;
         return this;
     }
 

@@ -26,7 +26,7 @@ public class Dog {
     @SQLiteColumn
     private int mAge;
 
-    @SQLiteColumn(references = "dog_owner_table(id) ON DELETE CASCADE")
+    @SQLiteColumn(reference = "dog_owner_table(id) ON DELETE CASCADE")
     private long mDogOwnerId;
 
     public Dog(String name) {

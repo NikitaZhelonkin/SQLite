@@ -13,14 +13,15 @@ import java.util.List;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 
-import ru.nikitazhelonkin.sqlite.ArrayUtils;
 import ru.nikitazhelonkin.sqlite.Column;
 import ru.nikitazhelonkin.sqlite.IContentValues;
 import ru.nikitazhelonkin.sqlite.ISQLiteCursor;
 import ru.nikitazhelonkin.sqlite.ISQLiteDatabase;
 import ru.nikitazhelonkin.sqlite.Table;
 import ru.nikitazhelonkin.sqlite.TableBuilder;
+import ru.nikitazhelonkin.sqlite.annotation.Reference;
 
 
 /**
@@ -83,6 +84,15 @@ class TableMaker {
                 .addParameter(ISQLiteDatabase.class, "db");
         TableBuilder tableBuilder = TableBuilder.create(mTableSpec.getTableName());
         for (ColumnSpec columnSpec : mTableSpec.getColumns()) {
+            StringBuilder referenceBuilder = new StringBuilder();
+            Reference reference = columnSpec.getReference();
+
+            if (reference != null) {
+                referenceBuilder.append(reference.parentTable())
+                        .append("(").append(reference.parentColumn()).append(")")
+                        .append(" ON UPDATE ").append(reference.onUpdate())
+                        .append(" ON DELETE ").append(reference.onDelete());
+            }
             tableBuilder.add(Column.create(
                     columnSpec.getColumnName(),
                     columnSpec.getColumnType(),
@@ -90,7 +100,7 @@ class TableMaker {
                     columnSpec.isAutoincrement(),
                     columnSpec.isUnique(),
                     columnSpec.isNotNull())
-                    .references(columnSpec.getReferences()));
+                    .references(referenceBuilder.toString()));
         }
         builder.addStatement("db.execSQL($S)", tableBuilder.toSql());
         List<IndexSpec> indexSpecList = mTableSpec.getIndices();
@@ -108,14 +118,12 @@ class TableMaker {
                 .addParameter(ClassName.get(mTableSpec.getOriginElement()), "object")
                 .addModifiers(Modifier.PUBLIC);
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
-            if (columnSpec.isAutoincrement()) {
-                continue;
-            }
-            if (Field.isStringArray(columnSpec.getFieldType())) {
-                builder.addStatement("values.put($L, $T.join(object.$L(), $S))", columnSpec.getColumnName().toUpperCase(),
-                        ArrayUtils.class,
-                        Field.getterName(columnSpec.getFieldName(), columnSpec.getFieldType()),
-                        ", ");
+            TypeMirror converterClass = columnSpec.getConverterClazz();
+            if (converterClass != null) {
+                builder.addStatement("values.put($L, new $T().serialize(object.$L()))",
+                        columnSpec.getColumnName().toUpperCase(),
+                        converterClass,
+                        Field.getterName(columnSpec.getFieldName(), columnSpec.getFieldType()));
             } else {
                 builder.addStatement("values.put($L, object.$L())",
                         columnSpec.getColumnName().toUpperCase(),
@@ -148,32 +156,22 @@ class TableMaker {
     private void createWithMethods(MethodSpec.Builder builder, final ClassName originClass) {
         builder.addStatement("final $1T object = new $1T()", originClass);
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
-            if (Field.isStringArray(columnSpec.getFieldType())) {
-                builder.addStatement("object.$L($T.split(cursor.getString(cursor.getColumnIndex($L)), $S))",
-                        Field.setterName(columnSpec.getFieldName(), columnSpec.getFieldType()),
-                        ArrayUtils.class,
-                        columnSpec.getColumnName().toUpperCase(),
-                        ", ");
-            } else if (Field.isLong(columnSpec.getFieldType())
-                    || Field.isInt(columnSpec.getFieldType())
-                    || Field.isShort(columnSpec.getFieldType())) {
-                builder.addStatement("object.$L(($T) cursor.getLong(cursor.getColumnIndex($L)))",
-                        Field.setterName(columnSpec.getFieldName(), columnSpec.getFieldType()), columnSpec.getFieldType(), columnSpec.getColumnName().toUpperCase());
-            } else if (Field.isBoolean(columnSpec.getFieldType())) {
-                builder.addStatement("object.$L(cursor.getLong(cursor.getColumnIndex($L)) == 1)",
-                        Field.setterName(columnSpec.getFieldName(), columnSpec.getFieldType()), columnSpec.getColumnName().toUpperCase());
-            } else if (Field.isDouble(columnSpec.getFieldType())
-                    || Field.isFloat(columnSpec.getFieldType())) {
-                builder.addStatement("object.$L(($T) cursor.getDouble(cursor.getColumnIndex($L)))",
-                        Field.setterName(columnSpec.getFieldName(),columnSpec.getFieldType()),
-                        columnSpec.getFieldType(), columnSpec.getColumnName().toUpperCase());
-            } else if (Field.isByteArray(columnSpec.getFieldType())) {
-                builder.addStatement("object.$L(cursor.getBlob(cursor.getColumnIndex($L)))",
-                        Field.setterName(columnSpec.getFieldName(),columnSpec.getFieldType()), columnSpec.getColumnName().toUpperCase());
-            } else if (Field.isString(columnSpec.getFieldType())) {
-                builder.addStatement("object.$L(cursor.getString(cursor.getColumnIndex($L)))",
-                        Field.setterName(columnSpec.getFieldName(),columnSpec.getFieldType()), columnSpec.getColumnName().toUpperCase());
+            TypeMirror converterClass = columnSpec.getConverterClazz();
+            TypeMirror fieldType = columnSpec.getFieldType();
+            if(converterClass!=null){
+                builder.addStatement("object.$L(new $T().deserialize(cursor.$L(cursor.getColumnIndex($L))))",
+                        Field.setterName(columnSpec.getFieldName(), fieldType), converterClass,  cursorGetMethodName(fieldType),
+                        columnSpec.getColumnName().toUpperCase());
+            }else if(Field.isBoolean(columnSpec.getFieldType())) {
+                builder.addStatement("object.$L(($T) (cursor.getInt(cursor.getColumnIndex($L)) == 1))",
+                        Field.setterName(columnSpec.getFieldName(), fieldType), fieldType,
+                        columnSpec.getColumnName().toUpperCase());
+            }else {
+                builder.addStatement("object.$L(($T) cursor.$L(cursor.getColumnIndex($L)))",
+                        Field.setterName(columnSpec.getFieldName(), fieldType), fieldType, cursorGetMethodName(fieldType),
+                        columnSpec.getColumnName().toUpperCase());
             }
+
         }
         builder.addStatement("return object");
     }
@@ -185,36 +183,44 @@ class TableMaker {
         for (int i = 0; i < mTableSpec.getColumns().size(); i++) {
             stringBuilder.append("\n");
             final ColumnSpec columnSpec = mTableSpec.getColumns().get(i);
-            if (Field.isStringArray(columnSpec.getFieldType())) {
-                stringBuilder.append("$T.split(cursor.getString(cursor.getColumnIndex($L)), $S)");
-                objects.add(ArrayUtils.class);
+            TypeMirror converterClass = columnSpec.getConverterClazz();
+            TypeMirror fieldType = columnSpec.getFieldType();
+
+            if(converterClass!=null){
+                stringBuilder.append("new $T().deserialize(cursor.$L(cursor.getColumnIndex($L)))");
+                objects.add(converterClass);
+                objects.add(cursorGetMethodName(fieldType));
                 objects.add(columnSpec.getColumnName().toUpperCase());
-                objects.add(", ");
-            } else if (Field.isLong(columnSpec.getFieldType())
-                    || Field.isInt(columnSpec.getFieldType())
-                    || Field.isShort(columnSpec.getFieldType())) {
-                stringBuilder.append("($T) cursor.getLong(cursor.getColumnIndex($L))");
-                objects.add(columnSpec.getFieldType());
+            }else if(Field.isBoolean(columnSpec.getFieldType())) {
+                stringBuilder.append("($T) (cursor.getInt(cursor.getColumnIndex($L) == 1))");
+                objects.add(fieldType);
                 objects.add(columnSpec.getColumnName().toUpperCase());
-            } else if (Field.isBoolean(columnSpec.getFieldType())) {
-                stringBuilder.append("cursor.getLong(cursor.getColumnIndex($L)) == 1");
-                objects.add(columnSpec.getColumnName().toUpperCase());
-            } else if (Field.isDouble(columnSpec.getFieldType())
-                    || Field.isFloat(columnSpec.getFieldType())) {
-                stringBuilder.append("($T) cursor.getDouble(cursor.getColumnIndex($L))");
-                objects.add(columnSpec.getFieldType());
-                objects.add(columnSpec.getColumnName().toUpperCase());
-            } else if (Field.isByteArray(columnSpec.getFieldType())) {
-                stringBuilder.append("cursor.getBlob(cursor.getColumnIndex($L))");
-                objects.add(columnSpec.getColumnName().toUpperCase());
-            } else if (Field.isString(columnSpec.getFieldType())) {
-                stringBuilder.append("cursor.getString(cursor.getColumnIndex($L))");
+            }else {
+                stringBuilder.append("($T) cursor.$L(cursor.getColumnIndex($L))");
+                objects.add(fieldType);
+                objects.add(cursorGetMethodName(fieldType));
                 objects.add(columnSpec.getColumnName().toUpperCase());
             }
             if (i != mTableSpec.getColumns().size() - 1) stringBuilder.append(",");
         }
         stringBuilder.append(")");
         builder.addStatement(stringBuilder.toString(), (Object[]) objects.toArray());
+    }
+
+    private String cursorGetMethodName(TypeMirror typeMirror){
+        if (Field.isLong(typeMirror)
+                || Field.isInt(typeMirror)
+                || Field.isShort(typeMirror)
+                || Field.isBoolean(typeMirror)) {
+            return "getLong";
+        } else if (Field.isDouble(typeMirror)
+                || Field.isFloat(typeMirror)) {
+            return "getDouble";
+        } else if (Field.isByteArray(typeMirror)) {
+            return "getBlob";
+        } else {
+            return "getString";
+        }
     }
 
     private void addColumnsFields(TypeSpec.Builder builder) {
