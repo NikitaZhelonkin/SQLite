@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,10 +15,15 @@ public abstract class BaseDao<T> {
 
     private Table<T> mTable;
     private SQLiteDatabaseProvider mSQLiteDatabaseProvider;
+    private boolean mLogEnabled;
 
     public BaseDao(SQLiteDatabaseProvider sqLiteDatabaseProvider, Table<T> table){
         mSQLiteDatabaseProvider = sqLiteDatabaseProvider;
         mTable = table;
+    }
+
+    public void setLogEnabled(boolean logEnabled) {
+        mLogEnabled = logEnabled;
     }
 
     public List<T> rawQuery(String sql, String... selectionArgs) {
@@ -194,6 +200,10 @@ public abstract class BaseDao<T> {
 
     public interface SelectionProvider<T> {
         Selection selection(T object);
+    }
+
+    private void log(String message){
+        if(mLogEnabled) Log.e(BaseDao.class.getSimpleName(), message);
     }
 
 }
