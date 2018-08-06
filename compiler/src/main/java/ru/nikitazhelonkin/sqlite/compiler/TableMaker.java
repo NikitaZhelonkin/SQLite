@@ -186,13 +186,13 @@ class TableMaker {
             TypeMirror converterClass = columnSpec.getConverterClazz();
             TypeMirror fieldType = columnSpec.getFieldType();
 
-            if(converterClass!=null){
+            if(converterClass != null){
                 stringBuilder.append("new $T().deserialize(cursor.$L(cursor.getColumnIndex($L)))");
                 objects.add(converterClass);
                 objects.add(cursorGetMethodName(fieldType));
                 objects.add(columnSpec.getColumnName().toUpperCase());
             }else if(Field.isBoolean(columnSpec.getFieldType())) {
-                stringBuilder.append("($T) (cursor.getInt(cursor.getColumnIndex($L) == 1))");
+                stringBuilder.append("($T) (cursor.getInt(cursor.getColumnIndex($L)) == 1)");
                 objects.add(fieldType);
                 objects.add(columnSpec.getColumnName().toUpperCase());
             }else {

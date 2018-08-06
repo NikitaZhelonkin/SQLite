@@ -31,6 +31,9 @@ public class Dog {
     @SQLiteColumn
     private String[] mArray;
 
+    @SQLiteColumn
+    private boolean mHidden;
+
     @SQLiteColumn(reference = @Reference(parentTable = "dog_owner_table", parentColumn = "id", onDelete = Reference.CASCADE))
     private long mDogOwnerId;
 
@@ -38,12 +41,13 @@ public class Dog {
 
     }
 
-    public Dog(long id, String name, int age, String[] array, long dogOwnerId) {
+    public Dog(long id, String name, int age, String[] array,  boolean hidden, long dogOwnerId) {
         mId = id;
         mName = name;
         mAge = age;
         mArray = array;
         mDogOwnerId = dogOwnerId;
+        mHidden = hidden;
     }
 
     public Dog(String name, int age, long dogOwnerId) {
@@ -90,6 +94,14 @@ public class Dog {
 
     public long getDogOwnerId() {
         return mDogOwnerId;
+    }
+
+    public boolean isHidden() {
+        return mHidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        mHidden = hidden;
     }
 
     @Override
