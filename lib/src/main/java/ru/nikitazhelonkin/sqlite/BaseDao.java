@@ -120,6 +120,7 @@ public abstract class BaseDao<T> {
             }
             return id;
         } catch (SQLiteException e) {
+            log(e.toString());
             return -1;
         }
     }

@@ -118,6 +118,9 @@ class TableMaker {
                 .addParameter(ClassName.get(mTableSpec.getOriginElement()), "object")
                 .addModifiers(Modifier.PUBLIC);
         for (final ColumnSpec columnSpec : mTableSpec.getColumns()) {
+            if (columnSpec.isAutoincrement()) {
+                continue;
+            }
             TypeMirror converterClass = columnSpec.getConverterClazz();
             if (converterClass != null) {
                 builder.addStatement("values.put($L, new $T().serialize(object.$L()))",
