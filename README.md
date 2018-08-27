@@ -5,8 +5,8 @@ Database library for Android based on SQLite
 ### Gradle:
 
 ```groovy
-implementation 'ru.nikitazhelonkin:sqlite:2.1.0'
-annotationProcessor 'ru.nikitazhelonkin:sqlite-compiler:2.1.0'
+implementation 'ru.nikitazhelonkin:sqlite:2.1.1'
+annotationProcessor 'ru.nikitazhelonkin:sqlite-compiler:2.1.1'
 ```
 
 ### Usage:
