@@ -5,8 +5,8 @@ Database library for Android based on SQLite
 ### Gradle:
 
 ```groovy
-implementation 'ru.nikitazhelonkin:sqlite:2.1.1'
-annotationProcessor 'ru.nikitazhelonkin:sqlite-compiler:2.1.1'
+implementation 'ru.nikitazhelonkin:sqlite:2.1.2'
+annotationProcessor 'ru.nikitazhelonkin:sqlite-compiler:2.1.2'
 ```
 
 ### Usage:
@@ -29,7 +29,7 @@ public class Dog {
     // Getters and setters are ignored for brevity, but they're required
 }
 ```
-Annotation Processor will generate ```DogTable``` and ```DogDao``` classes;
+Annotation Processor will generate ```DogTable``` class;
 
 Then override SQLiteHelper and register all tables:
 
@@ -50,15 +50,31 @@ public class MySQLiteHelper extends SQLiteHelper {
     }
 }
 ```
+Create entity dao class that extends from ```Dao<T>```:
 
+```java
+public class DogDao extends Dao<Dog> {
+
+    public DogDao(SQLiteDatabaseProvider provider) {
+        super(provider, DogTable.INSTANCE);
+    }
+    
+    //Custom methods here
+    public List<Dog> getPuppies(){
+        return query(Selection.create().lessThanOrEquals(DogTable.AGE, 1)); 
+    }
+}
+```
 ### Query
 
 ```java
+DogDao dogDao = new DogDao(helper);
+
 Dog guffy = dogDao.queryFirst(Selection.create().equals(DogTable.NAME, "Guffy" ));
 
 List<Dog> allDogs = dogDao.query();
 
-List<Dog> puppies  = dogDao.query(Selection.create().lessThanOrEquals(DogTable.AGE, 1));
+List<Dog> puppies  = dogDao.getPuppies();
 ``````
 
 ### Insert
