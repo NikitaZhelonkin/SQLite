@@ -66,8 +66,6 @@ public class AnnotationProcessor extends AbstractProcessor {
             try {
                 final JavaFile javaFile = new TableMaker(tableSpec).brewJavaFile();
                 javaFile.writeTo(filer);
-                final JavaFile javaFile2 = new DaoMaker(tableSpec).brewJavaFile();
-                javaFile2.writeTo(filer);
             } catch (Exception e) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e.getMessage(), typeElement);
             }

@@ -45,6 +45,7 @@ class TableMaker {
                 .addModifiers(Modifier.PUBLIC)
                 .addSuperinterface(baseTable(originClass))
                 .addField(makeInstanceField())
+                .addMethod(makeConstructor())
                 .addMethod(makeGetNameMethod())
                 .addMethod(makeCreateMethod())
                 .addMethod(makeBindValuesMethod())
@@ -66,6 +67,12 @@ class TableMaker {
 
     private TypeName baseTable(ClassName originClass) {
         return ParameterizedTypeName.get(ClassName.get(Table.class), originClass);
+    }
+
+    private MethodSpec makeConstructor() {
+        return MethodSpec.constructorBuilder()
+                .addModifiers(Modifier.PRIVATE)
+                .build();
     }
 
     private MethodSpec makeGetNameMethod() {

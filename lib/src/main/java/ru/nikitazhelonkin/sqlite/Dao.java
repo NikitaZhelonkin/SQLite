@@ -11,13 +11,13 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class BaseDao<T> {
+public abstract class Dao<T> {
 
     private Table<T> mTable;
     private SQLiteDatabaseProvider mSQLiteDatabaseProvider;
     private boolean mLogEnabled;
 
-    public BaseDao(SQLiteDatabaseProvider sqLiteDatabaseProvider, Table<T> table){
+    public Dao(SQLiteDatabaseProvider sqLiteDatabaseProvider, Table<T> table){
         mSQLiteDatabaseProvider = sqLiteDatabaseProvider;
         mTable = table;
     }
@@ -204,7 +204,7 @@ public abstract class BaseDao<T> {
     }
 
     private void log(String message){
-        if(mLogEnabled) Log.e(BaseDao.class.getSimpleName(), message);
+        if(mLogEnabled) Log.e(Dao.class.getSimpleName(), message);
     }
 
 }
